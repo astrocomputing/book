@@ -78,12 +78,12 @@ Astrocomputing is a vibrant, rapidly evolving field that empowers astrophysical 
 -    Chapter 24: Introduction to Deep Learning
 
 **Part V: Large Language Models (LLMs) in Astrophysics**
-    Chapter 25: Introduction to LLMs and Natural Language Processing (NLP)
-    Chapter 26: LLMs for Literature Search and Knowledge Discovery
-    Chapter 27: Code Generation and Assistance with LLMs
-    Chapter 28: LLMs for Data Analysis and Interpretation
-    Chapter 29: Building Simple LLM-Powered Astro Tools
-    Chapter 30: Ethical Considerations and Future of LLMs in Astrophysics
+-    Chapter 25: Introduction to LLMs and Natural Language Processing (NLP)
+-    Chapter 26: LLMs for Literature Search and Knowledge Discovery
+-    Chapter 27: Code Generation and Assistance with LLMs
+-    Chapter 28: LLMs for Data Analysis and Interpretation
+-    Chapter 29: Building Simple LLM-Powered Astro Tools
+-    Chapter 30: Ethical Considerations and Future of LLMs in Astrophysics
 
 **Part VI: Astrophysical Simulations**
 -    Chapter 31: Introduction to Astrophysical Modeling and Simulation
