@@ -1,21 +1,4 @@
----
 **Book Title:** Astrocomputing: Astrophysical Data Analysis and Process Simulation with Python
-
-**Overall Structure:**
-
-*   **Preface**
-*   **Part I: Astrophysical Data Representation** (6 Chapters)
-*   **Part II: Astrophysical Databases and Access** (6 Chapters)
-*   **Part III: Astrostatistics: Inference from Data** (6 Chapters)
-*   **Part IV: Machine Learning for Astronomical Discovery** (6 Chapters)
-*   **Part V: Simulating Astrophysical Processes** (6 Chapters)
-*   **Part VI: High-Performance Astrocomputing** (7 Chapters)
-*   **Part VII: Large Language Models (LLMs) in the Astrophysical Context** (6 Chapters)
-*   **Appendix I: Essential Python Programming for Scientists**
-*   **Appendix II: A Curated List of Python Modules for Astrocomputing**
-*   **Index**
-
----
 
 **Detailed Chapter Outline with Applications:**
 
