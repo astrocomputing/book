@@ -45,6 +45,9 @@ Astrocomputing is a vibrant, rapidly evolving field that empowers astrophysical 
 **Introduction**
 
 **Part I: Representing Astrophysical Data**
+
+This initial part of the book lays the crucial foundation for all subsequent astrocomputing tasks by focusing on how astrophysical data, from both observations and simulations, is represented, stored, and accessed using Python. It delves into the ubiquitous FITS standard, explaining its structure of headers and data units and demonstrating practical interaction via astropy.io.fits for reading metadata and accessing image and binary table data as NumPy structures. Beyond FITS, the part introduces other important formats like HDF5 (common for simulations) using h5py, Virtual Observatory VOTables, and common plain text formats (CSV, ASCII), highlighting the use of pandas and astropy.table.Table for robust tabular data handling. Crucially, it covers the essential layers of context required for physical interpretation: managing scientific units and constants with astropy.units and astropy.constants, understanding astronomical time scales with astropy.time, and working with celestial coordinate systems (WCS) and positional information using astropy.wcs and astropy.coordinates. Finally, fundamental data visualization techniques using matplotlib and WCSAxes are introduced, enabling the initial inspection and graphical exploration of these diverse datasets, ultimately equipping the reader with the core skills to load, understand, and prepare astrophysical data for analysis.
+
 -    [Chapter 1: Foundations of Astrophysical Data Formats](chapter-01.md)
 -    [Chapter 2: Advanced Data Structures and Formats](chapter-02.md)
 -    [Chapter 3: Units, Quantities, and Constants](chapter-03.md)
@@ -106,9 +109,8 @@ Astrocomputing is a vibrant, rapidly evolving field that empowers astrophysical 
 
 ----------
 
-**Part I: Representing Astrophysical Data**
 
-This initial part of the book lays the crucial foundation for all subsequent astrocomputing tasks by focusing on how astrophysical data, from both observations and simulations, is represented, stored, and accessed using Python. It delves into the ubiquitous FITS standard, explaining its structure of headers and data units and demonstrating practical interaction via astropy.io.fits for reading metadata and accessing image and binary table data as NumPy structures. Beyond FITS, the part introduces other important formats like HDF5 (common for simulations) using h5py, Virtual Observatory VOTables, and common plain text formats (CSV, ASCII), highlighting the use of pandas and astropy.table.Table for robust tabular data handling. Crucially, it covers the essential layers of context required for physical interpretation: managing scientific units and constants with astropy.units and astropy.constants, understanding astronomical time scales with astropy.time, and working with celestial coordinate systems (WCS) and positional information using astropy.wcs and astropy.coordinates. Finally, fundamental data visualization techniques using matplotlib and WCSAxes are introduced, enabling the initial inspection and graphical exploration of these diverse datasets, ultimately equipping the reader with the core skills to load, understand, and prepare astrophysical data for analysis.
+
 
 
 
