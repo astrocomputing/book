@@ -2108,7 +2108,6 @@ Building upon the FITS standard's structure, the chapter provides a practical in
             -   Extension: Fit a combined model (e.g., Bulge (Sérsic) + Disk (Exponential)) and compare its evidence to the single-component models. Plot the data with the best-fit profiles for both models being compared.
                 
 
-----------
 
 **Part IV: Machine Learning in Astrophysics**
 
@@ -2541,5 +2540,705 @@ Building upon the FITS standard's structure, the chapter provides a practical in
             *   *Processing:* Load snapshot. Define halo center. Create a `yt.ProfilePlot` centered on the halo. Plot both `('gas', 'density')` and `('deposit', 'PartType1_density')` (or similar DM density field) vs `'radius'`. Extract the profile data using `.profile`. Calculate the gas fraction `f_gas = density_gas / (density_gas + density_dm)` as a function of radius from the extracted profile data.
             *   *Output:* Plot showing the gas density and dark matter density profiles. Separate plot showing the calculated gas fraction `f_gas` as a function of radius.
             *   *Test:* Check if DM density dominates gas density overall. Check if gas fraction profile behaves reasonably (e.g., potentially decreasing towards center due to cooling/feedback, approach
+
+Okay, continuing the detailed book structure for "Astrocomputing: Astrophysical Data Analysis and Process Simulation with Python."
+
+---
+
+**Part IV: Machine Learning in Astrophysics**
+
+*   **Goal:** Introduce machine learning concepts and algorithms, demonstrating their application to astrophysical problems like classification, regression, and clustering using Python libraries, primarily `scikit-learn`.
+
+*   **Chapter 19: Introduction to Machine Learning Concepts**
+    *   19.1 What is ML? Why use it in Astrophysics? (Automation, large data, complex patterns). *Objective:* Motivate ML in an astro context.
+    *   19.2 Types of Learning: Supervised (labeled data: regression, classification), Unsupervised (unlabeled data: clustering, dimensionality reduction), Reinforcement Learning (brief mention). *Objective:* Categorize common ML paradigms.
+    *   19.3 Key Terminology: Features (input), Labels/Targets (output), Training/Test/Validation Sets. *Objective:* Define fundamental ML vocabulary.
+    *   19.4 The ML Workflow: Data Prep -> Feature Eng. -> Model Selection -> Training -> Evaluation -> Interpretation/Deployment. *Objective:* Outline the standard steps in an ML project.
+    *   19.5 Introduction to `scikit-learn`: Core API philosophy (Estimator: `.fit()`, `.predict()`, `.transform()`). Installation. *Objective:* Introduce the primary Python ML library. *Modules:* `sklearn`.
+    *   19.6 Bias-Variance Tradeoff: Underfitting vs. Overfitting. Model complexity. *Objective:* Introduce a core concept in model performance tuning.
+    *   **Astrophysical Applications:**
+        *   1.  **Solar Physics: Framing Flare Prediction as Classification**
+            *   *Technique Focus:* Translating a scientific question into an ML problem formulation (Supervised Classification), identifying potential features and labels (Sections 19.1, 19.2, 19.3).
+            *   *Data Source:* Labeled data combining SDO/HMI magnetogram properties (e.g., from SHARP parameters via JSOC) and GOES flare catalog timings.
+            *   *Modules Used:* Conceptual framing. Mention `pandas` for feature tables.
+            *   *Processing:* Define features: Vector magnetic field properties (total unsigned flux, gradients, shear angle, etc.) derived from SHARP data *before* a time window. Define label: Binary (1 if flare > M-class occurs within next 24h, 0 otherwise) based on GOES catalog. Discuss splitting data chronologically for training/testing.
+            *   *Output:* A clear description of the ML task: input features, output label, learning type (supervised classification).
+            *   *Test:* Discuss potential pitfalls: class imbalance (flares are rare), temporal correlations in data splitting.
+            *   *Extension:* Brainstorm additional features that could be relevant (e.g., past flare history of the active region, AIA emission properties). Consider framing it as regression (predicting flare intensity) or multi-class classification (predicting C/M/X class).
+        *   2.  **Asteroids: Framing Taxonomic Classification (Supervised/Unsupervised)**
+            *   *Technique Focus:* Framing a problem as either Supervised (if labels exist) or Unsupervised (if aiming for discovery), identifying features (Sections 19.1, 19.2, 19.3).
+            *   *Data Source:* Asteroid photometric colors (e.g., SDSS ugriz from MPCOrb database or dedicated surveys) and possibly albedo (e.g., from WISE/NEOWISE). Optional: Existing taxonomic labels (e.g., Bus-DeMeo from EAR-A-5-DDR-TAXONOMY-V6-0 archive).
+            *   *Modules Used:* Conceptual framing. Mention `pandas`.
+            *   *Processing:* Define features: Color indices (u-g, g-r, etc.), albedo. *Scenario 1 (Unsupervised):* Aim to discover groupings based on features alone. *Scenario 2 (Supervised):* Use existing taxonomic labels (S, C, X, etc.) as the target variable.
+            *   *Output:* Description of the features. Clear statement of the ML task (e.g., "Unsupervised clustering to find groups based on color and albedo" or "Supervised multi-class classification to predict Bus-DeMeo taxonomy from colors/albedo").
+            *   *Test:* Discuss data challenges: missing measurements (especially albedo), photometric errors, non-uniform data sources.
+            *   *Extension:* Consider adding other features like orbital elements (a, e, i). How might these relate to composition/taxonomy? Discuss how results from unsupervised clustering could be compared to existing taxonomic classes.
+
+*   **Chapter 20: Data Preprocessing for Machine Learning**
+    *   20.1 Handling Missing Data: Deletion, Imputation strategies (mean, median, model-based). `SimpleImputer`. *Objective:* Learn techniques to deal with incomplete datasets. *Modules:* `pandas`, `numpy`, `sklearn.impute.SimpleImputer`.
+    *   20.2 Feature Scaling: Importance, Standardization (`StandardScaler`), Normalization (`MinMaxScaler`). *Objective:* Understand why and how to scale features. *Modules:* `sklearn.preprocessing.StandardScaler`, `sklearn.preprocessing.MinMaxScaler`.
+    *   20.3 Encoding Categorical Features: One-Hot Encoding (`OneHotEncoder`), Label Encoding. *Objective:* Convert non-numeric features for ML algorithms. *Modules:* `sklearn.preprocessing.OneHotEncoder`, `sklearn.preprocessing.LabelEncoder`, `pandas.get_dummies`.
+    *   20.4 Feature Engineering and Selection: Creating new features, dimensionality reduction rationale. *Objective:* Understand how to craft and select informative features.
+    *   20.5 Handling Imbalanced Datasets: Resampling (over/under-sampling, SMOTE), class weights. *Objective:* Introduce strategies for biased datasets. *Modules:* Mention `imblearn` library. `sklearn` parameters (`class_weight`).
+    *   20.6 Using `scikit-learn` Pipelines: Combining steps. *Objective:* Learn to streamline preprocessing and modeling. *Modules:* `sklearn.pipeline.Pipeline`.
+    *   **Astrophysical Applications:**
+        *   1.  **Stellar Astrophysics: Preprocessing Gaia Catalog for Clustering**
+            *   *Technique Focus:* Applying imputation for missing values and feature scaling (Sections 20.1, 20.2).
+            *   *Data Source:* Gaia catalog data subset (e.g., G mag, BP-RP color, parallax, pmra, pmdec, radial_velocity). Radial velocities often missing.
+            *   *Modules Used:* `pandas`, `numpy`, `sklearn.impute.SimpleImputer`, `sklearn.preprocessing.StandardScaler`.
+            *   *Processing:* Load data into pandas DataFrame. Use `SimpleImputer(strategy='median')` to fill missing `radial_velocity`. Use `StandardScaler` to fit and transform relevant numeric columns (magnitudes, kinematics).
+            *   *Output:* Print `.isna().sum()` before and after imputation. Print `.mean()` and `.std()` for scaled columns (should be approx 0 and 1). Show the first few rows of the processed DataFrame.
+            *   *Test:* Verify no NaNs remain in imputed column. Confirm scaled columns have mean ~0, std ~1.
+            *   *Extension:* Combine imputation and scaling into a `sklearn.pipeline.Pipeline`. Try different imputation strategies (e.g., 'mean', or more advanced like KNNImputer). Compare the distributions of imputed vs. original radial velocities (if available for a subset).
+        *   2.  **Extragalactic: Preparing Galaxy Zoo Data for Morphology Classification**
+            *   *Technique Focus:* Encoding categorical features (if using non-numeric input like survey source), feature scaling, potentially feature engineering (Section 20.2, 20.3, 20.4).
+            *   *Data Source:* Galaxy Zoo dataset (or similar) containing expert/citizen classifications (e.g., elliptical, spiral, merger) and quantitative features (e.g., magnitudes, colors, concentration index, asymmetry).
+            *   *Modules Used:* `pandas`, `sklearn.preprocessing.StandardScaler`, `sklearn.preprocessing.OneHotEncoder` (if needed).
+            *   *Processing:* Load data. Assume target is 'morphology' (categorical). Select numeric features (colors, concentration, etc.). Apply `StandardScaler` to these features. If including a categorical feature like 'survey_name', apply `OneHotEncoder`.
+            *   *Output:* Shape and first few rows of the final feature matrix (NumPy array) ready for ML input. List of final feature names (including encoded ones).
+            *   *Test:* Check the number of columns in the output matrix matches expected features (numeric + encoded categorical). Verify scaled features have appropriate range/distribution.
+            *   *Extension:* Engineer new features, e.g., color indices from magnitudes. Use `sklearn.feature_selection.SelectKBest` to select the most informative features based on statistical tests (e.g., chi2 or f_classif) relative to the morphology labels.
+
+*   **Chapter 21: Supervised Learning: Regression**
+    *   21.1 Predicting Continuous Values: Problem definition. *Objective:* Define regression tasks.
+    *   21.2 Linear Regression and Regularization (Ridge, Lasso). *Objective:* Introduce linear models and regularization. *Modules:* `sklearn.linear_model.LinearRegression`, `Ridge`, `Lasso`.
+    *   21.3 Support Vector Regression (SVR). Kernels. *Objective:* Introduce SVM for regression. *Modules:* `sklearn.svm.SVR`.
+    *   21.4 Decision Trees and Random Forests for Regression. Feature importance. *Objective:* Introduce tree-based non-linear regression models. *Modules:* `sklearn.tree.DecisionTreeRegressor`, `sklearn.ensemble.RandomForestRegressor`.
+    *   21.5 Evaluating Regression Models (MSE, MAE, R-squared). *Objective:* Learn metrics to assess regression performance. *Modules:* `sklearn.metrics` (`mean_squared_error`, `mean_absolute_error`, `r2_score`).
+    *   21.6 Implementation: `train_test_split`, fitting, predicting, evaluating. *Objective:* Learn the practical `scikit-learn` workflow. *Modules:* `sklearn.model_selection.train_test_split`.
+    *   **Astrophysical Applications:**
+        *   1.  **Cosmology: Predicting Galaxy Cluster Mass from Observable Properties**
+            *   *Technique Focus:* Applying a non-linear regression model (Random Forest) and evaluating its performance (Sections 21.4, 21.5, 21.6).
+            *   *Data Source:* Catalog of galaxy clusters with observable properties (e.g., richness N_gal from optical surveys, X-ray luminosity Lx, SZ signal Y_SZ) and "true" masses (e.g., from weak lensing or simulations).
+            *   *Modules Used:* `sklearn.ensemble.RandomForestRegressor`, `sklearn.model_selection.train_test_split`, `sklearn.metrics.r2_score`, `sklearn.metrics.mean_squared_error`, `matplotlib.pyplot`, `pandas`.
+            *   *Processing:* Load data. Define features (N_gal, Lx, Y_SZ) and target (log10(Mass)). Split data using `train_test_split`. Train `RandomForestRegressor` on training set. Make predictions on test set. Calculate R^2 score and RMSE. Plot predicted log(Mass) vs true log(Mass).
+            *   *Output:* R^2 score and RMSE printed. Scatter plot of predicted vs true mass for the test set, with 1:1 line. Optionally, print feature importances (`model.feature_importances_`).
+            *   *Test:* Check if R^2 is reasonably high (>0.7 suggests some predictive power). Visually inspect plot for systematic deviations or increased scatter at high/low masses.
+            *   *Extension:* Compare the performance of Random Forest with a simpler Linear Regression model (potentially on log-transformed features/target). Perform hyperparameter tuning for the Random Forest (e.g., `n_estimators`, `max_depth`) using `GridSearchCV`.
+        *   2.  **Stellar Astrophysics: Estimating Stellar Parameters (Teff, logg) from Photometry**
+            *   *Technique Focus:* Applying regression models (e.g., SVR or Linear Regression) to predict multiple continuous outputs (multi-output regression), evaluation (Sections 21.2 or 21.3, 21.5, 21.6).
+            *   *Data Source:* Catalog of stars with multi-band photometry (e.g., Gaia BP/RP/G, 2MASS J/H/K) and reliable stellar parameters (Teff, logg, [Fe/H]) from spectroscopic surveys (e.g., APOGEE, GALAH, LAMOST).
+            *   *Modules Used:* `sklearn.svm.SVR` or `sklearn.linear_model.Ridge`, `sklearn.multioutput.MultiOutputRegressor` (if model doesn't handle multi-output natively), `sklearn.model_selection.train_test_split`, `sklearn.metrics.mean_absolute_error`, `pandas`.
+            *   *Processing:* Define features (magnitudes, colors). Define targets (Teff, logg). Use `StandardScaler` on features. Split data. Wrap the chosen regressor (e.g., `Ridge()`) in `MultiOutputRegressor` if needed. Train the model. Make predictions. Calculate MAE for Teff and logg separately on the test set.
+            *   *Output:* MAE values printed for Teff and logg predictions. Scatter plots of predicted vs true Teff and predicted vs true logg for the test set.
+            *   *Test:* Check if the MAE values are within acceptable limits for the science goal. Inspect scatter plots for biases or trends.
+            *   *Extension:* Try predicting metallicity ([Fe/H]) as well (3 outputs). Compare performance using different sets of photometric bands (e.g., Gaia only vs Gaia+2MASS). Use a Random Forest Regressor which handles multi-output natively.
+
+*   **Chapter 22: Supervised Learning: Classification**
+    *   22.1 Assigning Data to Categories: Binary vs. multi-class. *Objective:* Define classification tasks.
+    *   22.2 Logistic Regression: Linear model for binary classification. *Objective:* Introduce baseline linear classifier. *Modules:* `sklearn.linear_model.LogisticRegression`.
+    *   22.3 Support Vector Machines (SVM): Optimal hyperplane, kernels. *Objective:* Introduce powerful kernel-based classifier. *Modules:* `sklearn.svm.SVC`.
+    *   22.4 Decision Trees and Random Forests for Classification: Tree splitting, ensembles. Feature importance. *Objective:* Introduce tree-based non-linear classifiers. *Modules:* `sklearn.tree.DecisionTreeClassifier`, `sklearn.ensemble.RandomForestClassifier`.
+    *   22.5 Evaluating Classification Models: Accuracy, Confusion Matrix, Precision, Recall, F1, ROC Curve, AUC. Handling imbalance. *Objective:* Learn metrics for classification performance. *Modules:* `sklearn.metrics` (`accuracy_score`, `confusion_matrix`, `classification_report`, `roc_curve`, `roc_auc_score`).
+    *   22.6 Implementation: `train_test_split`, `.fit()`, `.predict()`, `.predict_proba()`, evaluation. *Objective:* Practical workflow.
+    *   **Astrophysical Applications:**
+        *   1.  **Quasars/AGN: Star-Galaxy-QSO Classification using Colors**
+            *   *Technique Focus:* Applying a multi-class classification model (Random Forest) and evaluating using confusion matrix and classification report (Sections 22.4, 22.5, 22.6).
+            *   *Data Source:* SDSS catalog data including photometry (ugriz magnitudes) and spectroscopic classification ('STAR', 'GALAXY', 'QSO').
+            *   *Modules Used:* `sklearn.ensemble.RandomForestClassifier`, `sklearn.model_selection.train_test_split`, `sklearn.metrics.classification_report`, `sklearn.metrics.confusion_matrix`, `pandas`.
+            *   *Processing:* Create features (e.g., magnitudes and colors u-g, g-r, r-i, i-z). Define target label based on spectroscopic class. Split data. Train `RandomForestClassifier`. Evaluate on test set using `classification_report` and `confusion_matrix`.
+            *   *Output:* Classification report (precision, recall, F1 per class). Confusion matrix displayed visually (e.g., using `ConfusionMatrixDisplay` or `seaborn.heatmap`). Overall accuracy. Feature importances (optional).
+            *   *Test:* Examine confusion matrix: which classes are most easily confused? Check precision/recall for minority classes (e.g., QSOs might be rarer).
+            *   *Extension:* Compare performance with a different classifier (e.g., `SVC`, `LogisticRegression`). Add morphological features (if available) and see if classification improves. Handle class imbalance using `class_weight='balanced'` option in the classifier or by using `imblearn` resampling techniques.
+        *   2.  **Gravitational Waves: Glitch vs. Signal Classification**
+            *   *Technique Focus:* Applying a binary classifier (e.g., SVM) to features extracted from time-series data, evaluating with ROC AUC (suitable for potentially imbalanced data) (Sections 22.3, 22.5, 22.6).
+            *   *Data Source:* Feature sets extracted from LIGO/Virgo time-series segments using tools like `gwpy` or `pycbc` (e.g., signal-to-noise ratio, frequency characteristics, duration, chi-squared values from template matching). Labels indicating 'Glitch' (detector noise artifact) or 'Signal' (astrophysical event candidate).
+            *   *Modules Used:* `sklearn.svm.SVC`, `sklearn.model_selection.train_test_split`, `sklearn.preprocessing.StandardScaler`, `sklearn.metrics.roc_auc_score`, `sklearn.metrics.roc_curve`, `matplotlib.pyplot`, `pandas`.
+            *   *Processing:* Load features and labels. Scale features using `StandardScaler`. Split data. Train `SVC` (potentially with RBF kernel and `class_weight='balanced'`). Get predicted probabilities using `predict_proba()`. Calculate ROC AUC score. Calculate ROC curve points using `roc_curve()`.
+            *   *Output:* ROC AUC score printed. Plot of the ROC curve (True Positive Rate vs False Positive Rate).
+            *   *Test:* Check if AUC score is significantly better than 0.5 (random guessing). Visually inspect ROC curve: does it rise quickly towards the top-left corner?
+            *   *Extension:* Compare SVC performance with Logistic Regression or Random Forest. Investigate which features are most important using Random Forest's `feature_importances_`. Try different feature sets to see impact on performance.
+
+*   **Chapter 23: Unsupervised Learning: Clustering and Dimensionality Reduction**
+    *   23.1 Finding Structure in Unlabeled Data: Motivation (discovery, grouping, visualization). *Objective:* Introduce unsupervised learning goals.
+    *   23.2 Clustering Algorithms: K-Means (centroid), DBSCAN (density), Hierarchical Clustering. Parameter choices. *Objective:* Learn common clustering techniques. *Modules:* `sklearn.cluster` (`KMeans`, `DBSCAN`, `AgglomerativeClustering`).
+    *   23.3 Evaluating Clustering Performance: Silhouette Score (internal), Adjusted Rand Index (external). *Objective:* Learn how to assess clustering quality. *Modules:* `sklearn.metrics` (`silhouette_score`, `adjusted_rand_score`).
+    *   23.4 Dimensionality Reduction: Principal Component Analysis (PCA). Explained variance. *Objective:* Introduce linear dimensionality reduction. *Modules:* `sklearn.decomposition.PCA`.
+    *   23.5 Manifold Learning (t-SNE, UMAP) for Visualization. *Objective:* Introduce non-linear techniques for visualizing high-D data. *Modules:* `sklearn.manifold.TSNE`, `umap-learn`.
+    *   23.6 Implementation: Fitting models (`.fit_predict()`, `.fit_transform()`). *Objective:* Practical workflow.
+    *   **Astrophysical Applications:**
+        *   1.  **Galactic Astronomy: Discovering Star Clusters/Associations with DBSCAN**
+            *   *Technique Focus:* Applying a density-based clustering algorithm (DBSCAN) to find groups in kinematic/positional space, visualizing results (Sections 23.2, 23.6).
+            *   *Data Source:* Gaia data: 3D positions (X, Y, Z derived from RA, Dec, parallax) and 3D velocities (U, V, W derived from proper motions and radial velocity, needs coordinate transformations). Select stars in a specific volume (e.g., within 500 pc).
+            *   *Modules Used:* `sklearn.cluster.DBSCAN`, `sklearn.preprocessing.StandardScaler`, `matplotlib.pyplot`, `pandas`, `numpy`.
+            *   *Processing:* Calculate/load 6D phase-space coordinates (X,Y,Z,U,V,W). Scale features using `StandardScaler`. Apply `DBSCAN` varying `eps` and `min_samples` parameters. Assign cluster labels (`clusters = db.fit_predict(scaled_features)`). Noise points get label -1.
+            *   *Output:* Number of clusters found (excluding noise). Number/percentage of noise points. Scatter plot of two dimensions (e.g., U vs V velocity, or X vs Y position), coloring points by their DBSCAN cluster label.
+            *   *Test:* Try different `eps` values: smaller `eps` finds smaller, denser clusters; larger `eps` merges clusters. Check if identified clusters appear spatially and kinematically coherent in plots.
+            *   *Extension:* Calculate the Silhouette Score (`silhouette_score`) if meaningful clusters are found (can be tricky with DBSCAN's noise points). Analyze the properties (e.g., age, metallicity, if available) of stars within the identified clusters. Compare DBSCAN results with K-Means clustering.
+        *   2.  **Extragalactic Astronomy: Visualizing Galaxy Spectral Features with PCA/UMAP**
+            *   *Technique Focus:* Applying dimensionality reduction (PCA and UMAP/t-SNE) to high-dimensional data (spectra) for visualization and identifying dominant variance components (Sections 23.4, 23.5, 23.6).
+            *   *Data Source:* Sample of galaxy spectra from SDSS (flux vs. wavelength), pre-processed (resampled to common wavelength grid, normalized).
+            *   *Modules Used:* `sklearn.decomposition.PCA`, `umap-learn`, `numpy`, `matplotlib.pyplot`.
+            *   *Processing:* Load spectral data into N_galaxies x N_wavelengths array. Apply `PCA(n_components=...)` using `.fit_transform()`. Get principal components (PCs) and explained variance ratio. Apply `UMAP(n_components=2)` using `.fit_transform()`.
+            *   *Output:* Scree plot (explained variance ratio vs PC number). Plot of the first few principal component spectra (eigenvectors). Scatter plot of galaxies projected onto the first two UMAP dimensions (UMAP1 vs UMAP2).
+            *   *Test:* Check if the first few PCs capture a significant fraction of the variance. Visually inspect eigenspectra: do they resemble typical spectral features (continuum shape, emission/absorption lines)? See if UMAP projection separates galaxies based on visual morphology or color (if labels available).
+            *   *Extension:* Color the points in the UMAP plot by a physical property (e.g., star formation rate, color, Sérsic index) to see if the manifold learning captures physical correlations. Try t-SNE (`sklearn.manifold.TSNE`) instead of UMAP and compare the resulting visualization.
+
+*   **Chapter 24: Introduction to Deep Learning**
+    *   24.1 Artificial Neural Networks (ANNs): MLP basics. *Objective:* Introduce basic neural network concepts. *Modules:* `tensorflow.keras.layers.Dense`.
+    *   24.2 Key Components: Activation, Loss, Optimizers. Backpropagation concept. *Objective:* Understand building blocks of NNs. *Modules:* `tensorflow.keras` (`activations`, `losses`, `optimizers`).
+    *   24.3 Convolutional Neural Networks (CNNs): Convolutional/Pooling layers for image analysis. *Objective:* Introduce CNNs for grid-like data. *Modules:* `tensorflow.keras.layers` (`Conv2D`, `MaxPooling2D`, `Flatten`).
+    *   24.4 Recurrent Neural Networks (RNNs): For sequential data (time series). LSTM/GRU units. *Objective:* Introduce RNNs for sequences. *Modules:* `tensorflow.keras.layers` (`SimpleRNN`, `LSTM`, `GRU`).
+    *   24.5 Introduction to Frameworks: TensorFlow (Keras API) and PyTorch. Basic model definition/training. *Objective:* Introduce major DL frameworks. *Modules:* `tensorflow`, `torch`.
+    *   24.6 Challenges: Data needs, computation, overfitting, interpretability. *Objective:* Understand limitations.
+    *   **Astrophysical Applications:**
+        *   1.  **Solar Physics: CNN for Active Region Classification**
+            *   *Technique Focus:* Building and training a simple Convolutional Neural Network (CNN) for image classification (Sections 24.3, 24.5).
+            *   *Data Source:* Cropped SDO/HMI continuum images or magnetograms centered on active regions, labeled with a simple morphological or flare-potential class (e.g., 'simple', 'complex', or 'quiet', 'flare-imminent'). Dataset needs to be prepared/curated.
+            *   *Modules Used:* `tensorflow.keras` (`Sequential`, `Conv2D`, `MaxPooling2D`, `Flatten`, `Dense`), `sklearn.model_selection.train_test_split`, `numpy`, `matplotlib.pyplot`.
+            *   *Processing:* Load images and labels. Preprocess images (e.g., resize, normalize pixel values). One-hot encode labels if multi-class. Split data. Define CNN architecture using Keras Sequential API (`Conv2D`->`ReLU`->`MaxPool2D` repeated, `Flatten`, `Dense` output layer with softmax). Compile model (optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy']). Train using `.fit()`, including validation data. Plot training/validation loss and accuracy curves.
+            *   *Output:* Training/validation history plots (accuracy/loss vs epoch). Final accuracy evaluated on a held-out test set.
+            *   *Test:* Check for signs of overfitting (training accuracy high, validation accuracy plateaued or decreasing). Verify loss decreases during training. Compare accuracy to baseline (e.g., random guessing).
+            *   *Extension:* Try different CNN architectures (more layers, different filter sizes, dropout layers for regularization). Implement data augmentation (random rotations, flips) during training to improve robustness. Use transfer learning by starting with a pre-trained CNN (e.g., VGG16, ResNet) and fine-tuning it on the solar data.
+        *   2.  **Pulsars: RNN/LSTM for Pulsar Candidate Classification from Time Series Features**
+            *   *Technique Focus:* Applying a Recurrent Neural Network (LSTM) to classify sequences (features derived from frequency sub-bands or time sub-integrations) (Sections 24.4, 24.5).
+            *   *Data Source:* Pulsar candidate data where features (e.g., S/N, width) are extracted per frequency channel or time sub-integration, forming a sequence for each candidate. Labels: 'pulsar' vs 'RFI/noise'. E.g., HTRU Medlat data or simulated data.
+            *   *Modules Used:* `tensorflow.keras` (`Sequential`, `LSTM`, `Dense`), `sklearn.model_selection.train_test_split`, `numpy`, `matplotlib.pyplot`.
+            *   *Processing:* Load sequences (shape: N_candidates x N_timesteps x N_features) and labels. Preprocess features (e.g., scale). Split data. Define RNN model using Keras (`LSTM` layer(s) followed by `Dense` output layer with sigmoid activation for binary classification). Compile (optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']). Train using `.fit()`. Plot training/validation history. Evaluate on test set (accuracy, AUC).
+            *   *Output:* Training/validation history plots. Final test accuracy and AUC score.
+            *   *Test:* Check for overfitting. Ensure input data shape matches LSTM layer expectations. Compare performance to non-sequential ML models (e.g., Random Forest) trained on aggregated features.
+            *   *Extension:* Try using GRU layers instead of LSTM. Experiment with stacking multiple LSTM layers. Pad sequences if they have variable lengths. Apply dropout within the LSTM layers.
+
+---
+
+**Part V: Large Language Models (LLMs) in Astrophysics**
+
+*   **Goal:** Explore the emerging applications, potential, and limitations of Large Language Models in astrophysical research workflows using Python interfaces.
+
+*   **Chapter 25: Introduction to LLMs and Natural Language Processing (NLP)**
+    *   25.1 What are LLMs? Transformer Architecture Basics (Self-attention). *Objective:* Understand the basics of LLMs and Transformers.
+    *   25.2 Key Concepts: Tokens, Embeddings, Attention. *Objective:* Define core LLM terminology.
+    *   25.3 Pre-training and Fine-tuning Paradigms. *Objective:* Understand how LLMs are trained and adapted.
+    *   25.4 Overview of Major LLMs (GPT series, BERT, Llama, etc.). Access methods. *Objective:* Familiarize with common LLMs.
+    *   25.5 Introduction to NLP Tasks relevant to Astrophysics. *Objective:* Connect NLP tasks to potential astro uses.
+    *   25.6 Python Libraries: `transformers` (Hugging Face), `nltk`, `spaCy`. *Objective:* Introduce key Python NLP/LLM libraries. *Modules:* `transformers`, `nltk`, `spacy`.
+    *   **Astrophysical Applications:**
+        *   1.  **General Research: Tokenizing an Astro Abstract**
+            *   *Technique Focus:* Understanding tokenization, using a tokenizer from the `transformers` library (Sections 25.2, 25.6).
+            *   *Data Source:* Abstract text from an astrophysics paper (e.g., copy-pasted from arXiv).
+            *   *Modules Used:* `transformers.AutoTokenizer`.
+            *   *Processing:* Instantiate tokenizer `tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')`. Apply tokenizer `tokens = tokenizer.tokenize(abstract_text)`. Get IDs `ids = tokenizer.convert_tokens_to_ids(tokens)` or directly `ids = tokenizer.encode(abstract_text)`.
+            *   *Output:* Print the list of tokens (subword strings). Print the corresponding list of integer IDs. Print the decoded version using `tokenizer.decode(ids)` to verify.
+            *   *Test:* Observe how common words vs. jargon vs. punctuation are tokenized. Check if decoding the IDs reconstructs the original text (approximately).
+            *   *Extension:* Try different tokenizers (e.g., from 'gpt2', 'roberta-base') and compare how they tokenize the same abstract. Tokenize a code snippet instead of natural language.
+        *   2.  **Observational Astronomy: Named Entity Recognition in Observing Logs**
+            *   *Technique Focus:* Using a pre-built NLP pipeline from `transformers` for a specific task (Named Entity Recognition - NER) (Sections 25.5, 25.6).
+            *   *Data Source:* Sample observing log entries (short text strings). E.g., "Slewed to M31 field.", "Target SN 2023xyz acquired on ACIS-S.", "Lost guide star near NGC 1275."
+            *   *Modules Used:* `transformers.pipeline`.
+            *   *Processing:* Load NER pipeline `ner_pipeline = pipeline('ner', grouped_entities=True)`. Apply pipeline to each log entry string `results = ner_pipeline(log_entry)`.
+            *   *Output:* For each log entry, print the text and the list of entities identified by the pipeline, including their label (e.g., ORG, LOC, MISC) and confidence score.
+            *   *Test:* Check if known object names (M31, NGC 1275, SN 2023xyz) are correctly identified (though standard NER models might struggle with astronomical designations, often labeling them ORG or MISC).
+            *   *Extension:* Try a 'zero-shot-classification' pipeline instead. Provide candidate labels like 'Target Acquisition', 'Calibration', 'Weather Problem', 'Instrument Problem' and see how the pipeline classifies the log entries without specific training. Fine-tune a dedicated NER model on astronomical text for better performance (advanced).
+
+*   **Chapter 26: LLMs for Literature Search and Knowledge Discovery**
+    *   26.1 Challenges in Literature Search. *Objective:* Motivate LLM use for literature review.
+    *   26.2 LLMs for Semantic Search (vs. keyword). Embeddings. ADS API. *Objective:* Explore concept of searching by meaning. *Modules:* `requests` (`ads`), `sentence-transformers`, vector DBs (mention).
+    *   26.3 Question-Answering Systems based on Astro Corpora. *Objective:* Use LLMs to answer questions from specific text. *Modules:* `transformers.pipeline('question-answering')`, `langchain`.
+    *   26.4 Summarizing Research Papers and Topics. *Objective:* Use LLMs for text summarization. *Modules:* `transformers.pipeline('summarization')`, `openai` API.
+    *   26.5 Identifying Connections and Trends (Advanced). *Objective:* Hint at potential for knowledge synthesis.
+    *   26.6 Limitations: Hallucinations, outdated knowledge, bias, citation issues. *Objective:* Emphasize critical evaluation.
+    *   **Astrophysical Applications:**
+        *   1.  **General Research: Summarizing arXiv Abstracts**
+            *   *Technique Focus:* Using a pre-trained summarization model via `transformers` pipeline (Section 26.4, 25.6).
+            *   *Data Source:* Recent paper abstracts retrieved programmatically from arXiv API (using `requests` or `arxiv` library) based on keywords (e.g., 'exoplanet atmosphere').
+            *   *Modules Used:* `requests` or `arxiv`, `transformers.pipeline`.
+            *   *Processing:* Fetch ~5 recent abstracts matching keywords. Load summarization pipeline `summarizer = pipeline('summarization', model='sshleifer/distilbart-cnn-12-6')` (or similar). For each abstract, call `summary = summarizer(abstract_text, max_length=..., min_length=..., do_sample=False)`.
+            *   *Output:* Print the title and the generated summary for each of the fetched abstracts.
+            *   *Test:* Read the original abstract and the summary. Does the summary capture the main points accurately? Is it fluent? Try adjusting `max_length`/`min_length`.
+            *   *Extension:* Compare summaries generated by different models available on Hugging Face Hub. Try summarizing the full introduction section of a paper instead of just the abstract. Use an API-based LLM (like OpenAI's) via their Python client for potentially higher quality summaries.
+        *   2.  **Stellar Astrophysics: Question Answering from a Review Article Section**
+            *   *Technique Focus:* Using a Q&A pipeline to extract specific answers from a given context document (Section 26.3, 25.6).
+            *   *Data Source:* A paragraph or section of text from a review article about stellar evolution (e.g., describing helium fusion processes).
+            *   *Modules Used:* `transformers.pipeline`.
+            *   *Processing:* Copy the text section into a Python string `context`. Load Q&A pipeline `qa_pipeline = pipeline('question-answering')`. Define a question relevant to the context, `question = "What reaction initiates helium fusion in stars?"`. Call `result = qa_pipeline(question=question, context=context)`.
+            *   *Output:* Print the extracted answer string and its confidence score.
+            *   *Test:* Verify the extracted answer is factually correct based on the provided context. Ask a question whose answer is *not* explicitly in the context and observe the model's response (might be low confidence or nonsensical).
+            *   *Extension:* Try asking more complex questions requiring synthesis of information from multiple sentences in the context. Use a longer context document (e.g., a full paper section) and see how performance changes. Compare results from different underlying Q&A models available via Hugging Face.
+
+*   **Chapter 27: Code Generation and Assistance with LLMs**
+    *   27.1 Using LLMs for Code (Copilot, ChatGPT, Code Llama). Prompting. *Objective:* Introduce LLMs as coding aids.
+    *   27.2 Generating Boilerplate Code. *Objective:* Automate common coding patterns.
+    *   27.3 Debugging Assistance and Code Explanation. *Objective:* Use LLMs to understand and fix code.
+    *   27.4 Translating Code Snippets (e.g., IDL to Python). Limitations. *Objective:* Explore code translation potential.
+    *   27.5 Generating Documentation (Docstrings). *Objective:* Use LLMs to document code.
+    *   27.6 Best Practices: Verification, Understanding, Security. *Objective:* Emphasize responsible usage.
+    *   **Astrophysical Applications:**
+        *   1.  **General Astrocomputing: Generating a FITS Reading Function**
+            *   *Technique Focus:* Prompting an LLM to generate functional Python code for a common astro task (Sections 27.1, 27.2, 27.5).
+            *   *Data Source:* N/A (code generation task).
+            *   *Modules Used:* LLM Interface (Web UI like ChatGPT, or `openai` API, or Copilot). Target module: `astropy.io.fits`.
+            *   *Processing:* Provide a detailed prompt: "Write a Python function using `astropy.io.fits` that takes a FITS filename and an HDU number (defaulting to 0) as input. The function should open the FITS file, read the data from the specified HDU, read the header from the same HDU, and return both the data array and the header object. Include error handling for file not found or invalid HDU number. Add a clear docstring explaining the function, arguments, and return values."
+            *   *Output:* The Python function code generated by the LLM, including imports, function definition, logic, error handling, and docstring.
+            *   *Test:* Copy the generated code into a Python script. Test it with a valid FITS file. Test it with a non-existent file path. Test it with an invalid HDU number. Verify the returned data and header are correct. Check if the docstring is accurate.
+            *   *Extension:* Modify the prompt to request the function also accept an optional keyword name and return its value from the header. Prompt the LLM to add type hints to the function signature and docstring.
+        *   2.  **Data Analysis: Explaining a Complex `astropy.table` Operation**
+            *   *Technique Focus:* Using an LLM to explain existing code (Section 27.3).
+            *   *Data Source:* N/A (code explanation task). A potentially confusing snippet of `astropy.table` manipulation code, e.g., involving grouping, joining, and masked arrays.
+            *   *Modules Used:* LLM Interface. Target module: `astropy.table`.
+            *   *Processing:* Provide the code snippet to the LLM. Prompt: "Explain what this Python code using `astropy.table` does step-by-step. Assume `table1` and `table2` are existing Astropy Table objects."
+            *   *Output:* A natural language explanation of the code's logic, variable transformations, and expected outcome.
+            *   *Test:* Manually trace the code's execution with simple example tables and compare the result to the LLM's explanation. Check if the explanation correctly identifies the purpose of each function call.
+            *   *Extension:* Provide the LLM with slightly incorrect code and ask it to identify the error and suggest a fix. Ask the LLM to rewrite the code snippet in a more efficient or readable way.
+
+*   **Chapter 28: LLMs for Data Analysis and Interpretation**
+    *   28.1 Generating Textual Descriptions of Plots/Data. *Objective:* Automate reporting/captioning.
+    *   28.2 Assisting in Interpretation (Statistical results, suggestions). Caution! *Objective:* Explore LLMs for interpreting results (requires validation).
+    *   28.3 Hypothesis Generation based on Data Exploration. Caution! *Objective:* Explore potential for discovery (requires validation).
+    *   28.4 Analyzing Unstructured Text Data (Logs, Proposals). *Objective:* Extract info from free text. *Modules:* `transformers` pipelines, `openai` API.
+    *   28.5 Potential for Automating Parts of Analysis Pipeline. *Objective:* Consider automation possibilities.
+    *   28.6 Critical Evaluation: Need for domain expertise, verification. *Objective:* Reiterate importance of human oversight.
+    *   **Astrophysical Applications:**
+        *   1.  **Exoplanets: Generating Draft Summary from Analysis Results**
+            *   *Technique Focus:* Prompting an LLM to synthesize structured results (parameter estimates) into a natural language summary (Sections 28.1, 28.2).
+            *   *Data Source:* Output parameter estimates (median values and credible intervals) from a previous analysis (e.g., MCMC fit from Ch 17: Rp/Rs, Period, t0, etc.). Key statistical results (e.g., BIC value, goodness-of-fit p-value).
+            *   *Modules Used:* LLM Interface or `openai` API.
+            *   *Processing:* Construct a prompt including the analysis context (e.g., "Summarize the results of a transit fit analysis for planet candidate KOI-123.01") and the key numerical results/statistics. Ask for a brief paragraph suitable for an abstract or discussion section.
+            *   *Output:* A paragraph of generated text summarizing the findings (e.g., "We find a planet candidate with a radius of X +/- Y R_earth orbiting its star every Z +/- A days... The model provides a good fit to the data (BIC = ...).").
+            *   *Test:* Carefully check the generated text for factual accuracy against the input results. Ensure it doesn't over-interpret or make claims not supported by the data provided. Check for fluency and appropriate scientific language.
+            *   *Extension:* Provide results from comparing two different models (e.g., circular vs eccentric orbit fit) and prompt the LLM to describe the model comparison result and its implications. Ask the LLM to generate a figure caption for a plot showing the phase-folded light curve and best-fit model.
+        *   2.  **Observational Astronomy: Extracting Key Info from Telescope Proposals**
+            *   *Technique Focus:* Using LLM prompting or potentially fine-tuning for information extraction from unstructured text (Section 28.4).
+            *   *Data Source:* Text from several successful telescope time proposals (publicly available examples, e.g., from HST, ESO archives, or synthetic).
+            *   *Modules Used:* LLM Interface or `openai` API. Could involve `transformers` if fine-tuning.
+            *   *Processing:* Provide the abstract or science justification section of a proposal to the LLM. Prompt it to extract specific information: "Extract the following information from this proposal text: Primary target name(s), Scientific goal(s), Instrument(s) requested, Total observing time requested (if mentioned)." Use few-shot prompting (provide 1-2 examples in the prompt) if needed for better formatting.
+            *   *Output:* Extracted information, possibly in a structured format (e.g., key-value pairs or a short list) for each proposal analyzed.
+            *   *Test:* Manually read the proposal text and verify that the LLM correctly extracted the requested information without hallucinating details. Check if it handles variations in wording.
+            *   *Extension:* Fine-tune a smaller, open-source LLM (like Flan-T5 or a BERT variant) specifically on a dataset of telescope proposals annotated with the desired information fields for potentially more robust and specialized extraction. Use the LLM to classify proposals based on scientific topic (e.g., 'Exoplanets', 'Cosmology', 'Stellar').
+
+*   **Chapter 29: Building Simple LLM-Powered Astro Tools**
+    *   29.1 Using LLM APIs (e.g., OpenAI). Authentication, requests, responses. *Objective:* Learn the basics of interacting with LLM APIs programmatically. *Modules:* `openai`.
+    *   29.2 Prompt Engineering Techniques: Instructions, context, few-shot prompting, output formatting. *Objective:* Learn how to write effective prompts.
+    *   29.3 Retrieval-Augmented Generation (RAG): Concept of combining LLM generation with external knowledge retrieval. *Objective:* Introduce a technique to improve factual accuracy. *Modules:* Mention `langchain`, vector stores (`chromadb`, `faiss`), embedding models (`sentence-transformers`).
+    *   29.4 Example: Chatbot for FITS Keywords. *Objective:* Build a simple tool using API calls. *Modules:* `openai`, `astropy.io.fits`.
+    *   29.5 Example: arXiv Summarizer Tool. *Objective:* Build another example integrating external data. *Modules:* `openai`, `feedparser`/`requests`.
+    *   29.6 Cost, Rate Limits, Latency Considerations. *Objective:* Understand practical constraints of using APIs.
+    *   **Astrophysical Applications:**
+        *   1.  **Instrument Support: Simple FITS Header Keyword Explainer**
+            *   *Technique Focus:* Calling an LLM API (`openai`) from Python, basic prompt engineering, integrating with other Python code (`astropy.io.fits`) (Sections 29.1, 29.2, 29.4 concept).
+            *   *Data Source:* A sample FITS file from a specific instrument (e.g., HST/WFC3). Optional: A simple text file or dictionary containing known explanations for common keywords.
+            *   *Modules Used:* `openai`, `astropy.io.fits`.
+            *   *Processing:* Define a function `explain_keyword(filename, keyword)`: Load the FITS header. Get the value and comment for the `keyword`. Construct a prompt for the OpenAI API: "Explain the meaning of the FITS keyword '{keyword}' which has value '{value}' and comment '{comment}' in the context of an image from the {Instrument Name} instrument on {Telescope Name}. [Optional: Provide known explanation snippet here if implementing basic RAG]". Call the API using `openai.ChatCompletion.create(...)`. Extract and return the explanation from the response.
+            *   *Output:* The explanation string generated by the LLM for a requested keyword (e.g., 'FLASHDUR').
+            *   *Test:* Try common keywords (e.g., 'EXPTIME', 'FILTER') and instrument-specific ones. Check if the explanation is accurate and relevant to the instrument context provided in the prompt. See if including the comment helps the LLM.
+            *   *Extension:* Implement a simple RAG approach: Create a dictionary mapping keywords to known documentation snippets. In the function, retrieve the relevant snippet and include it explicitly in the prompt context before asking the LLM to explain. Build a simple command-line interface using `argparse` to allow users to specify the FITS file and keyword.
+        *   2.  **Research Workflow: Daily arXiv Astro-ph Topic Modeler**
+            *   *Technique Focus:* Calling an LLM API, prompt engineering for summarization/topic extraction, fetching external data (RSS/API) (Sections 29.1, 29.2, 29.5 concept).
+            *   *Data Source:* arXiv astro-ph RSS feed or API for the current day.
+            *   *Modules Used:* `openai`, `feedparser` (or `arxiv`, `requests`).
+            *   *Processing:* Use `feedparser` to fetch titles and summaries/abstracts for today's astro-ph postings. Combine them into a single large text block. Create a detailed prompt for the OpenAI API: "Analyze the following list of titles and abstracts from today's arXiv astro-ph submissions. Identify the 3-5 main research topics discussed today and briefly list the key findings or trends for each topic. Today's submissions:\n\n{combined_text}". Call the API.
+            *   *Output:* A textual summary generated by the LLM, listing the main topics identified in the day's papers and associated key points.
+            *   *Test:* Manually scan the day's arXiv titles/abstracts and see if the LLM's identified topics and summaries seem reasonable and representative. Check for hallucinated topics or findings.
+            *   *Extension:* Modify the prompt to ask for classification based on predefined categories (e.g., 'Cosmology', 'Exoplanets', 'Stellar', 'Galactic', 'Instrumentation'). Store the daily topic summaries over time to track trends.
+
+*   **Chapter 30: Ethical Considerations and Future of LLMs in Astrophysics**
+    *   30.1 Bias in Training Data and Model Outputs. *Objective:* Raise awareness of potential biases.
+    *   30.2 Reproducibility and Transparency Challenges. *Objective:* Discuss challenges in documenting and reproducing LLM-based results.
+    *   30.3 The Risk of "Hallucinations" and Misinformation. *Objective:* Emphasize the need for verification.
+    *   30.4 Impact on Scientific Writing and Peer Review. *Objective:* Discuss effects on publication process.
+    *   30.5 Future Trends: Multimodal LLMs, Autonomous Agents, Sci-LLMs. *Objective:* Look ahead at potential developments.
+    *   30.6 Responsible Use Guidelines: Verification, disclosure, critical thinking. *Objective:* Provide practical advice for ethical use.
+    *   **Astrophysical Applications (Discussion / Conceptual):**
+        *   1.  **Research Integrity: Guidelines for LLM Use in Publications**
+            *   *Technique Focus:* Applying ethical considerations to the research process (Sections 30.2, 30.4, 30.6).
+            *   *Data Source:* N/A.
+            *   *Modules Used:* N/A.
+            *   *Processing:* Outline a set of recommended guidelines for astrophysicists using LLMs in preparing publications. Address: When and how to disclose LLM use (e.g., in methods, acknowledgements). Responsibility for verifying LLM-generated text/code/analysis. Avoiding plagiarism. Appropriateness of using LLMs for peer review.
+            *   *Output:* A bulleted list or short document outlining responsible usage guidelines for LLMs in astrophysical publications.
+            *   *Test:* Discuss these guidelines with peers or mentors. Compare them to emerging policies from journals or institutions.
+            *   *Extension:* Draft a sample "Methods" section paragraph describing how an LLM was used for a specific task (e.g., code generation, text editing) in a reproducible and transparent way.
+        *   2.  **Future Telescopes: Brainstorming LLM Roles in LSST Science Platform**
+            *   *Technique Focus:* Speculating on future applications based on LLM capabilities and limitations (Section 30.5).
+            *   *Data Source:* N/A. Understanding of LSST data products and Rubin Science Platform goals.
+            *   *Modules Used:* N/A.
+            *   *Processing:* Brainstorm potential roles for LLMs integrated within the Rubin Science Platform. Examples: Natural language interface for querying catalogs ("Find red spiral galaxies near RA=X, Dec=Y"). Assistance in writing analysis code within notebooks. Automated anomaly detection summaries based on alert stream features. Generating draft descriptions of data products or analysis results. Summarizing relevant documentation.
+            *   *Output:* A list of potential LLM applications within the LSST/RSP context, briefly noting the potential benefits and challenges/risks for each.
+            *   *Test:* For each proposed application, critically evaluate its feasibility given current LLM limitations (hallucinations, computational cost, real-time needs). Discuss the level of human oversight required.
+            *   *Extension:* Sketch out a hypothetical user interaction flow for one of the proposed applications (e.g., the natural language catalog query). Consider the necessary backend components (data access, LLM API calls, result formatting).
+
+---
+
+**Part VI: Astrophysical Simulations**
+
+*   **Goal:** Introduce different types of astrophysical simulations, basic numerical methods, running simple examples, and analyzing simulation data using Python tools.
+
+*   **Chapter 31: Introduction to Astrophysical Modeling and Simulation**
+    *   31.1 Why Simulate? (Theory vs Obs, exploration, prediction). *Objective:* Motivate the use of simulations.
+    *   31.2 Types of Simulations: N-body, Hydro (SPH, Grid/AMR), MHD, Radiative Transfer (RT). *Objective:* Categorize major simulation types.
+    *   31.3 Governing Equations (Gravity, Hydrodynamics, Maxwell's, RT). *Objective:* Introduce the underlying physics equations.
+    *   31.4 Scales in Simulations (Stellar Interiors to Cosmology). Resolution. *Objective:* Understand the range of simulation applications and scale challenges.
+    *   31.5 The Simulation Lifecycle: Setup -> Execution -> Analysis -> Visualization. *Objective:* Outline the simulation workflow.
+    *   31.6 Limitations and Approximations: Numerical errors, subgrid physics, cost. *Objective:* Understand inherent limitations.
+    *   **Astrophysical Applications:**
+        *   1.  **Cosmology: The Role of Dark Matter in N-body Simulations**
+            *   *Technique Focus:* Understanding the purpose and limitations of a specific simulation type (N-body) in a specific context (cosmology) (Sections 31.1, 31.2, 31.4, 31.6).
+            *   *Data Source:* N/A - Conceptual.
+            *   *Modules Used:* N/A.
+            *   *Processing:* Explain why large-scale structure simulations are dominated by N-body techniques (gravity is dominant force, dark matter is collisionless). Describe how these simulations predict the 'cosmic web' of filaments, nodes, and voids formed by dark matter halos. Explain how galaxy formation models are built upon these N-body results (semi-analytic models, hydro simulations run in smaller volumes).
+            *   *Output:* A textual explanation of the role and importance of N-body simulations in cosmology, highlighting the connection to dark matter halo formation and large-scale structure.
+            *   *Test:* Contrast the goals of cosmological N-body simulations with N-body simulations of globular clusters (where collisions are important).
+            *   *Extension:* Discuss the concept of "resolution" in N-body simulations (particle mass, force softening) and how it limits the smallest halos that can be reliably simulated. Mention alternative theories to dark matter and how simulations might test them.
+        *   2.  **Star Formation: The Need for Hydrodynamics and Feedback**
+            *   *Technique Focus:* Identifying the necessary physics and simulation types for a complex problem (star formation), understanding subgrid physics concept (Sections 31.1, 31.2, 31.3, 31.6).
+            *   *Data Source:* N/A - Conceptual.
+            *   *Modules Used:* N/A.
+            *   *Processing:* Explain why simulating star formation requires including gas dynamics (hydrodynamics) to model turbulence, gravitational collapse, disk formation, and fragmentation. Discuss the necessity of including "subgrid" models for processes that cannot be directly resolved, such as stellar feedback (winds, radiation, supernovae), and their crucial role in regulating star formation efficiency.
+            *   *Output:* A textual explanation contrasting star formation simulations with pure N-body, emphasizing the required physics (hydro, gravity, feedback) and the concept of subgrid modeling.
+            *   *Test:* Explain why simulating feedback is computationally challenging. Give examples of different types of feedback.
+            *   *Extension:* Discuss the role of magnetic fields (MHD simulations) and radiative transfer in influencing star formation, adding further complexity to the simulations. Mention observational probes used to test star formation simulations (e.g., core mass function, star formation rate, outflows).
+
+*   **Chapter 32: Numerical Methods Basics**
+    *   32.1 Discretization: Finite Difference/Volume/Element, Particle methods (SPH). *Objective:* Understand how continuous equations are made discrete.
+    *   32.2 Smoothed Particle Hydrodynamics (SPH): Lagrangian method, kernel smoothing. *Objective:* Introduce a common particle-based hydro method.
+    *   32.3 Solving ODEs: Integrators (Euler, Runge-Kutta adaptive). Initial value problems. *Objective:* Learn basic ODE solving techniques. *Modules:* `scipy.integrate.solve_ivp`.
+    *   32.4 Solving PDEs: Explicit vs. Implicit schemes. Courant condition. *Objective:* Introduce concepts for solving hydro/MHD equations.
+    *   32.5 Gravity Solvers: Direct Summation, Tree Methods, Particle-Mesh (PM), TreePM. *Objective:* Understand different algorithms for calculating gravity.
+    *   32.6 Intro to Parallel Computing Concepts (Domain Decomposition, Load Balancing). *Objective:* Briefly link numerical methods to parallel execution.
+    *   **Astrophysical Applications:**
+        *   1.  **Planetary Dynamics/Asteroids: Integrating the Restricted 3-Body Problem**
+            *   *Technique Focus:* Applying an ODE solver (`solve_ivp`) to a system of coupled first-order ODEs representing equations of motion (Section 32.3).
+            *   *Data Source:* Initial position and velocity of a small body (asteroid) in the rotating frame of the Sun-Jupiter system (mass ratio μ ≈ 0.001). Initial conditions chosen near an L4/L5 Lagrange point.
+            *   *Modules Used:* `scipy.integrate.solve_ivp`, `numpy`, `matplotlib.pyplot`.
+            *   *Processing:* Define a function `three_body_eom(t, y, mu)` where `y = [x, y, vx, vy]` representing the coupled ODEs for the restricted 3-body problem in the rotating frame. Use `solve_ivp` to integrate the trajectory for several Jupiter orbital periods.
+            *   *Output:* A plot showing the trajectory of the asteroid in the rotating (x, y) frame, illustrating libration around the L4 or L5 point (a tadpole or horseshoe orbit).
+            *   *Test:* Verify that the integrator conserves Jacobi constant (a conserved quantity in the restricted 3-body problem) to within some tolerance. Try initial conditions far from L4/L5 and observe chaotic scattering.
+            *   *Extension:* Implement a higher-order integrator (e.g., specify `method='RK45'` or `'DOP853'` in `solve_ivp`) and compare results/speed. Add a small non-gravitational force (like radiation pressure) to the equations of motion and see how it affects the stability near L4/L5.
+        *   2.  **Stellar Evolution: Simple Polytrope Model using ODE Solver**
+            *   *Technique Focus:* Solving a boundary value problem (simplified stellar structure) formulated as ODEs using an ODE integrator with a shooting method approach (conceptual application of Section 32.3).
+            *   *Data Source:* Polytropic relation P = K * ρ^((n+1)/n). Lane-Emden equation formulation.
+            *   *Modules Used:* `scipy.integrate.solve_ivp`, `numpy`, `matplotlib.pyplot`.
+            *   *Processing:* Formulate the Lane-Emden equation (a 2nd order ODE) as a system of two 1st order ODEs for dimensionless variables ξ (radius) and θ (related to density/temp). Define the ODE function `lane_emden_eom(xi, y, n)` where `y = [theta, dtheta_dxi]`. Use `solve_ivp` starting from center (ξ=0, θ=1, dθ/dξ=0). Integrate outwards until θ approaches 0 (the surface). This requires stopping the integration based on the state vector value.
+            *   *Output:* Plot of the dimensionless density/temperature profile θ as a function of dimensionless radius ξ for a specific polytropic index n (e.g., n=1.5 for convective stars, n=3 for radiative stars). The value of ξ where θ first hits zero (ξ_1).
+            *   *Test:* Check if the solution matches known analytic solutions for n=0, 1, 5. Verify the surface radius ξ_1 matches tabulated values for the chosen n.
+            *   *Extension:* Implement a simple shooting method: guess the central density (related to K or initial conditions), integrate outwards, check if surface boundary conditions (P=0, T=0) are met. Adjust central density and repeat until boundary conditions are satisfied. This is closer to how real stellar structure is solved.
+
+*   **Chapter 33: N-Body Simulations**
+    *   33.1 Simulating Gravitational Dynamics: Collisionless vs. Collisional. *Objective:* Differentiate N-body regimes.
+    *   33.2 Setting up Initial Conditions (ICs): Cosmological ICs, idealized galaxies (Plummer, Disk models). *Objective:* Understand how simulations are initialized. *Modules:* `galpy`, mention CAMB/CLASS, MUSIC/MonofonIC.
+    *   33.3 Introduction to N-body Codes (GADGET, AREPO, ENZO, GIZMO, RAMSES). *Objective:* Familiarize with common simulation codes.
+    *   33.4 Running a Simple N-body Simulation (`galpy` orbit integration, simple direct summation script). *Objective:* Perform a basic N-body calculation. *Modules:* `galpy.potential`, `galpy.orbit`, `numpy`.
+    *   33.5 Analyzing N-body Output: Snapshot formats, reading particle data, density profiles, velocity dispersion, halo finding concept. *Objective:* Learn basic analysis tasks for N-body data. *Modules:* `yt`, `h5py`, `numpy`, `scipy.stats`, mention Rockstar/AHF.
+    *   33.6 Collisionless vs. Collisional Effects: Relaxation, mass segregation, core collapse. *Objective:* Understand physics specific to collisional systems.
+    *   **Astrophysical Applications:**
+        *   1.  **Galactic Dynamics: Tidal Disruption of a Dwarf Galaxy**
+            *   *Technique Focus:* Setting up idealized galaxy models (potentials), integrating orbits of test particles in combined potentials (Sections 33.2, 33.4).
+            *   *Data Source:* N/A - setting up idealized potential models.
+            *   *Modules Used:* `galpy.potential` (e.g., `LogarithmicHaloPotential` for host, `PlummerSpherePotential` for dwarf), `galpy.orbit`, `numpy`, `matplotlib.pyplot`.
+            *   *Processing:* Define potentials for a host galaxy (e.g., Milky Way like) and a satellite dwarf galaxy. Define an initial `Orbit` object for the dwarf galaxy potential moving within the host potential. Define many `Orbit` objects representing stars *within* the dwarf, initially following the dwarf's orbit but with small internal velocities/positions relative to dwarf center. Integrate all orbits (dwarf center + dwarf stars) within the host potential over several Gyr using `orbit.integrate()`.
+            *   *Output:* Plots showing the positions of the dwarf's stars at different time steps (e.g., t=0, 2, 4, 6 Gyr), illustrating the formation of tidal tails as the dwarf is disrupted by the host's potential. Plot of the dwarf center's orbit.
+            *   *Test:* Verify the dwarf center follows a decaying orbit due to dynamical friction (if included in potential) or maintains orbit if potential is static. Check if tidal tails become longer and more prominent over time.
+            *   *Extension:* Use a more realistic host potential (e.g., `MWPotential2014`). Vary the initial orbit or mass of the dwarf galaxy and observe the effect on the disruption timescale and morphology of the tails. Track the bound mass of the dwarf over time.
+        *   2.  **Star Clusters: Mass Segregation Simulation (Conceptual/Simplified)**
+            *   *Technique Focus:* Simulating a collisional system (concept), analyzing particle properties over time (mass, position) (Sections 33.1, 33.6, 33.5). (Requires a collisional N-body code, but can illustrate principle).
+            *   *Data Source:* Initial conditions for a star cluster (positions, velocities) with a range of stellar masses (e.g., sampled from an IMF). Can use existing simulation output.
+            *   *Modules Used:* `numpy`, `matplotlib.pyplot`. (Assume data loaded from a collisional N-body code output, e.g., NBODY6, PeTar).
+            *   *Processing:* Load particle positions and masses from snapshots at early (t=0) and late times (e.g., several relaxation times). Calculate the average mass of stars within different radial bins (e.g., inner 10%, next 20%, etc.) at both time steps.
+            *   *Output:* Plot showing the average stellar mass as a function of radius at t=0 and the later time. The plot should show a higher average mass in the inner regions at the later time, indicating mass segregation.
+            *   *Test:* Verify that the total mass and number of stars are conserved (or decrease slightly due to escapers). Check if the effect is stronger for simulations run longer.
+            *   *Extension:* Calculate the half-mass relaxation time for the initial cluster configuration. Plot the radial distribution of only the most massive stars at different times to see them sinking towards the center. If velocity data is available, compare velocity dispersions of high-mass vs low-mass stars.
+
+*   **Chapter 34: Hydrodynamical Simulations**
+    *   34.1 Modeling Fluid Dynamics: Euler equations, equation of state. *Objective:* Introduce hydro equations.
+    *   34.2 Eulerian (Grid/AMR) vs. Lagrangian (SPH) Approaches. Pros/cons. *Objective:* Compare main hydro methods.
+    *   34.3 Hydro Solvers: Riemann Solvers, Artificial Viscosity. *Objective:* Introduce numerical techniques for solving hydro equations.
+    *   34.4 Including Physics: Gravity, Cooling, Heating, Chemistry, MHD, Star Formation/Feedback (Subgrid). *Objective:* Understand additional physics often included.
+    *   34.5 Introduction to Hydro Codes (GADGET/GIZMO, AREPO, FLASH, ATHENA, RAMSES, ENZO). *Objective:* Familiarize with common hydro codes.
+    *   34.6 Analyzing Hydro Simulation Output: Snapshots, gas properties (density, temp, velocity), derived quantities. *Objective:* Learn basic analysis tasks for hydro data. *Modules:* `yt`, `h5py`, `numpy`, `matplotlib.pyplot`.
+    *   **Astrophysical Applications:**
+        *   1.  **Galaxy Formation: Visualizing Gas Inflows and Outflows**
+            *   *Technique Focus:* Analyzing hydro simulation output, creating slice plots with velocity overlays (Sections 34.6).
+            *   *Data Source:* Snapshot from a cosmological hydrodynamic simulation (e.g., IllustrisTNG, EAGLE, Simba). Focus on a single galaxy halo.
+            *   *Modules Used:* `yt`.
+            *   *Processing:* Load snapshot using `yt.load()`. Identify center of target halo (e.g., using `ds.find_max('density')` or halo catalog). Create a slice plot through the center using `yt.SlicePlot(ds, 'z', ('gas', 'density'), center=halo_center, width=(...))`. Use `.annotate_velocity()` method on the plot object to overlay gas velocity vectors. Use `.annotate_sphere()` to mark a reference radius (e.g., virial radius).
+            *   *Output:* A slice plot showing gas density with velocity vectors overlaid, visually indicating regions of gas inflow (vectors pointing inwards) and outflow (vectors pointing outwards, potentially from feedback).
+            *   *Test:* Check if density and velocity scales are appropriate. Verify velocity vectors indicate expected flows (e.g., infall along filaments, outflow from galactic center).
+            *   *Extension:* Create a slice plot colored by gas temperature or metallicity instead of density. Calculate the net mass inflow/outflow rate across a spherical shell at a specific radius (e.g., 0.1 * R_vir) using `yt` data containers and field calculations. Create a phase plot (Temperature vs Density) for gas within the halo.
+        *   2.  **Supernova Remnants: Analyzing Shock Structure**
+            *   *Technique Focus:* Analyzing hydro output, creating slice plots and 1D profiles (Sections 34.6).
+            *   *Data Source:* Snapshot from a hydrodynamic simulation of a supernova explosion expanding into the interstellar medium.
+            *   *Modules Used:* `yt`, `numpy`.
+            *   *Processing:* Load snapshot. Create a slice plot using `yt.SlicePlot` showing gas temperature (`('gas', 'temperature')`), highlighting the hot shocked bubble. Create a 1D radial profile using `yt.ProfilePlot(ds, 'radius', [('gas', 'density'), ('gas', 'temperature')], center=explosion_center, weight_field='cell_volume')`.
+            *   *Output:* Slice plot of temperature. 1D plot showing density and temperature as a function of radius from the explosion center, clearly showing the shock jump conditions (density/temperature increase at shock front).
+            *   *Test:* Verify the radial profile shows a sharp increase in density and temperature at the shock radius seen in the slice plot. Check if temperature inside bubble is significantly higher than ambient medium.
+            *   *Extension:* Create a slice plot colored by Mach number (`('gas', 'mach_number')`) if available, or calculate it as a derived field. Calculate the total thermal and kinetic energy within the supernova remnant bubble using `ds.sphere(...).quantities.total_quantity(...)`.
+
+*   **Chapter 35: Analyzing Simulation Data with `yt`**
+    *   35.1 Introduction to `yt`: Philosophy (data-centric, fields), installation, supported codes. *Objective:* Introduce the `yt` analysis framework. *Modules:* `yt`.
+    *   35.2 Loading Simulation Datasets (`yt.load()`). Dataset object (`ds`), parameters, domain. *Objective:* Learn how to load simulation data into `yt`. *Modules:* `yt`.
+    *   35.3 Accessing Data Fields (particle, grid, derived). Data objects (`ds.sphere`, `ds.region`). *Objective:* Learn how `yt` handles data access. *Modules:* `yt`.
+    *   35.4 Creating Projections and Slices (`yt.ProjectionPlot`, `yt.SlicePlot`). Axis, field, center, width, weighting. *Objective:* Learn core visualization techniques in `yt`. *Modules:* `yt`.
+    *   35.5 Generating Phase Plots and Profiles (`yt.PhasePlot`, `yt.ProfilePlot`). Axes, binning, weighting. *Objective:* Learn other common analysis plots in `yt`. *Modules:* `yt`.
+    *   35.6 Working with Particle and Grid Data Uniformly. *Objective:* Understand `yt`'s unified data handling. *Modules:* `yt`.
+    *   **Astrophysical Applications:**
+        *   1.  **Cosmology: Gas Fraction Profile in a Galaxy Cluster**
+            *   *Technique Focus:* Using `yt` data containers (`ds.sphere`), creating 1D profiles (`yt.ProfilePlot`), accessing different field types (gas density, dark matter density - requires derived field or particle access) (Sections 35.2, 35.3, 35.5).
+            *   *Data Source:* Cosmological hydro simulation snapshot containing gas and dark matter (e.g., IllustrisTNG, EAGLE, Enzo). Center coordinates of a massive cluster halo.
+            *   *Modules Used:* `yt`, `numpy`.
+            *   *Processing:* Load snapshot. Define halo center. Create a `yt.ProfilePlot` centered on the halo. Plot both `('gas', 'density')` and `('deposit', 'PartType1_density')` (or similar DM density field) vs `'radius'`. Extract the profile data using `.profile`. Calculate the gas fraction `f_gas = density_gas / (density_gas + density_dm)` as a function of radius from the extracted profile data.
+            *   *Output:* Plot showing the gas density and dark matter density profiles. Separate plot showing the calculated gas fraction `f_gas` as a function of radius.
+            *   *Test:* Check if DM density dominates gas density overall. Check if gas fraction profile behaves reasonably (e.g., potentially decreasing towards center due to cooling/feedback, approaching cosmic mean at large radii).
+            *   *Extension:* Create a projection plot (`yt.ProjectionPlot`) of the gas density weighted by X-ray emissivity (requires defining a derived field for emissivity based on density and temperature) to simulate an X-ray observation. Calculate the total gas mass and dark matter mass within the cluster's virial radius using `ds.sphere(...).quantities.total_quantity(...)`.
+        *   2.  **Star Formation: Analyzing Clump Properties in a Molecular Cloud Sim**
+            *   *Technique Focus:* Using `yt` data selection (`ds.cut_region`), accessing multiple fields, creating phase plots (Sections 35.2, 35.3, 35.5). (Optionally, clump finding).
+            *   *Data Source:* Hydrodynamic simulation of a turbulent molecular cloud forming dense cores/clumps.
+            *   *Modules Used:* `yt`, `numpy`. Mention `yt.analysis_modules.level_sets` (clump finding).
+            *   *Processing:* Load snapshot. Optionally use `yt.analysis_modules.level_sets.ClumpFinding` to identify dense clumps based on a density threshold. Alternatively, define a region manually around a dense core using `ds.cut_region(["obj['density'] > 1e-20"])` or a sphere. Create a data container for the selected region/clump. Create a `yt.PhasePlot` for this data container, plotting temperature vs density, weighted by cell mass (`weight_field=('gas', 'cell_mass')`). Calculate the total mass and average temperature within the selected region/clump using `.quantities.total_quantity([('gas', 'cell_mass')])` and `.mean_quantity([('gas', 'temperature')], weight=('gas', 'cell_mass'))`.
+            *   *Output:* Phase plot (Temp vs Density) for the selected region/clump. Printed values for the total mass and average temperature of the region/clump.
+            *   *Test:* Verify the phase plot shows gas primarily at high density and low temperature, characteristic of a dense core. Check if the calculated mass and average temperature are physically reasonable.
+            *   *Extension:* If using clump finding, iterate through identified clumps, calculate their individual masses and sizes, and plot a histogram of clump masses (Clump Mass Function). Create a projection plot of column density (`('gas', 'density')` integrated along line of sight) for the whole cloud, potentially overlaying markers for identified clumps.
+
+*   **Chapter 36: Comparing Simulations with Observations**
+    *   36.1 The Importance of Validation. *Objective:* Motivate comparison with reality.
+    *   36.2 Creating Mock Observations: Bridging simulation data to observables. *Objective:* Introduce the concept of mock observations.
+    *   36.3 Generating Mock Images (Simple luminosity sum, dust effects concept, PSF). *Objective:* Learn basic mock image creation. *Modules:* `yt`, `numpy`, `astropy.convolution`, mention RT codes (`SKIRT`, `Powderday`).
+    *   36.4 Generating Mock Spectra and Spectral Cubes (SPS models, kinematics). Mock IFU. *Objective:* Learn basic mock spectra creation. *Modules:* Mention SPS (`python-fsps`), `yt`, `numpy`, `specutils`.
+    *   36.5 Statistical Comparisons (Luminosity Functions, Correlation Functions). *Objective:* Compare simulated and observed populations statistically. *Modules:* `numpy`, `matplotlib.pyplot`, `scipy.stats`.
+    *   36.6 Parameter Studies and Constraining Models. *Objective:* Use comparisons to constrain simulation parameters.
+    *   **Astrophysical Applications:**
+        *   1.  **Extragalactic: Comparing Simulated vs Observed Galaxy Luminosity Function**
+            *   *Technique Focus:* Generating a statistical distribution from simulation results (galaxy luminosities) and comparing it to observational data (Section 36.5). Mock observation concept (Section 36.2).
+            *   *Data Source:* Cosmological simulation snapshot with a galaxy catalog containing stellar masses or luminosities in specific bands (e.g., SDSS r-band). Observational luminosity function data (e.g., from SDSS surveys, often tabulated).
+            *   *Modules Used:* `yt` (or `h5py`/`pandas` to read catalog), `numpy`, `matplotlib.pyplot`. (Assume luminosity pre-calculated or simple M*/L relation).
+            *   *Processing:* Load galaxy catalog from simulation snapshot (e.g., using halo finder + subhalo properties). Extract r-band absolute magnitudes (M_r) or calculate from stellar mass. Create a histogram of M_r using `numpy.histogram()`. Convert counts to number density (divide by simulation volume). Load observational luminosity function data (M_r, phi(M_r), error).
+            *   *Output:* A plot comparing the simulated galaxy luminosity function (histogram points with Poisson errors sqrt(N)/V) to the observed luminosity function (data points with error bars).
+            *   *Test:* Check if the shape and normalization of the simulated LF roughly match observations (e.g., faint-end slope, characteristic magnitude M*). Identify potential discrepancies (e.g., over/under-production of bright/faint galaxies).
+            *   *Extension:* Include effects of dust attenuation in calculating mock luminosities based on gas/metallicity content from simulation (requires more complex modeling or post-processing). Compare luminosity functions in different photometric bands. Use a K-S test (`scipy.stats.ks_2samp`) if comparing cumulative distributions rather than differential LFs.
+        *   2.  **Black Holes: Mock X-ray Image of Accretion Flow**
+            *   *Technique Focus:* Creating a basic mock image by projecting a relevant physical quantity (X-ray emissivity) from a simulation (Sections 36.2, 36.3).
+            *   *Data Source:* Hydrodynamic or MHD simulation snapshot of gas flow around a black hole (e.g., accretion disk, Bondi accretion). Gas density and temperature needed.
+            *   *Modules Used:* `yt`, `numpy`, `astropy.convolution` (optional).
+            *   *Processing:* Load snapshot using `yt`. Define a derived field for X-ray emissivity (e.g., proportional to `density**2 * temperature**0.5` for thermal bremsstrahlung, or more complex model). Create a projection plot along a chosen axis (e.g., 'z') using `yt.ProjectionPlot`, integrating the emissivity field. Optionally, convolve the resulting projected image with a Gaussian PSF representing telescope resolution using `astropy.convolution.convolve_fft`.
+            *   *Output:* A mock X-ray image (2D array displayed using `imshow`) representing the projected X-ray surface brightness of the accretion flow. Include a colorbar.
+            *   *Test:* Check if the brightest regions in the mock image correspond to the densest/hottest parts of the accretion flow visible in density/temperature slices. Verify the image morphology seems physically plausible (e.g., disk-like, centrally peaked).
+            *   *Extension:* Use a more realistic emissivity model based on plasma physics codes (e.g., using `ChiantiPy` or pre-computed tables). Generate mock images in different X-ray energy bands. Include absorption effects if simulating flow through a torus or wind.
+
+---
+
+**Part VII: High-Performance Computing (HPC) for Astrophysics**
+
+*   **Goal:** Introduce the concepts and tools needed to run large-scale astrophysical analyses and simulations on HPC resources using Python effectively.
+
+*   **Chapter 37: Introduction to HPC Environments**
+    *   37.1 Why HPC? Problems exceeding desktop capabilities. *Objective:* Motivate HPC use.
+    *   37.2 Anatomy of an HPC Cluster: Nodes, interconnect, storage, scheduler. *Objective:* Understand basic cluster hardware/software components.
+    *   37.3 Shared vs. Distributed Memory Architectures. *Objective:* Differentiate parallel architectures.
+    *   37.4 Accessing HPC Resources: SSH, Modules, File Systems. *Objective:* Learn basic cluster login and environment management.
+    *   37.5 Job Schedulers (SLURM, PBS/Torque): Batch processing, submission scripts, monitoring jobs. *Objective:* Learn how to submit and manage jobs.
+    *   37.6 Resource Allocation and Quotas. *Objective:* Understand usage limits.
+    *   **Astrophysical Applications:**
+        *   1.  **Simulation: Writing and Submitting a SLURM Job Script**
+            *   *Technique Focus:* Creating a batch submission script for a job scheduler (SLURM), requesting resources, loading modules, running an executable (Sections 37.4, 37.5).
+            *   *Data Source:* A simple simulation code (e.g., compiled C/Fortran N-body code, or a serial Python script `my_script.py` that takes time).
+            *   *Modules Used:* Shell commands (`sbatch`, `squeue`), text editor.
+            *   *Processing:* Create `submit.slurm`: Include `#!/bin/bash`, `#SBATCH --nodes=1`, `#SBATCH --ntasks=1`, `#SBATCH --cpus-per-task=4` (if script uses 4 threads), `#SBATCH --mem=4G`, `#SBATCH --time=01:00:00`, `#SBATCH --job-name=MySim`. Add `module load python/3.9` (or compilers). Add command `python my_script.py input.par` or `./my_sim input.par`. Submit using `sbatch submit.slurm`. Monitor using `squeue -u $USER`.
+            *   *Output:* The `submit.slurm` script file. Output from `sbatch` (job ID). Output from `squeue` showing the job status (pending/running). Standard output/error files generated by the job upon completion.
+            *   *Test:* Check if the job runs and completes successfully (check output files, scheduler logs). Verify resource usage reported by scheduler matches request.
+            *   *Extension:* Modify the script to request more nodes/cores (e.g., for an MPI job). Add commands to copy input files to a scratch directory before running and copy results back afterwards. Use job arrays (`#SBATCH --array=1-10`) to submit multiple similar jobs with slightly different parameters.
+        *   2.  **Data Analysis: Checking Environment and Transferring Data**
+            *   *Technique Focus:* Connecting via SSH, navigating file systems, checking available software/modules, transferring files (Sections 37.4).
+            *   *Data Source:* A local data file (`my_data.fits`, ~10MB). Access to an HPC cluster.
+            *   *Modules Used:* Shell commands (`ssh`, `scp`, `rsync`, `ls`, `cd`, `df`, `module`).
+            *   *Processing:* Connect: `ssh username@cluster.address`. Navigate: `cd /path/to/project/directory`. Check space: `df -h .`. Check software: `module avail python`, `module avail astropy`. Transfer file from local machine: `scp my_data.fits username@cluster.address:/path/to/project/directory/`. Verify transfer: `ls -lh` on cluster.
+            *   *Output:* Successful SSH connection. Printout from `df -h`. Printout from `module avail`. Confirmation of file transfer via `ls`.
+            *   *Test:* Verify you can log in. Confirm module command works. Check if the transferred file exists on the cluster with the correct size.
+            *   *Extension:* Use `rsync -avhP my_data.fits ...` instead of `scp` (often more efficient, handles interruptions). Create a symbolic link on the cluster. Edit a file on the cluster using a terminal editor (`nano`, `vim`). Check current resource usage quotas if available (`quota -s`).
+
+*   **Chapter 38: Parallel Programming Fundamentals**
+    *   38.1 Concepts: Parallelism vs. Concurrency, Speedup, Efficiency, Amdahl's Law. *Objective:* Define core parallel concepts and metrics.
+    *   38.2 Task Parallelism vs. Data Parallelism. *Objective:* Differentiate parallelization strategies.
+    *   38.3 Process-based Parallelism: `multiprocessing`. `Pool`. Good for single-node multi-core. *Objective:* Learn Python's standard library for process parallelism. *Modules:* `multiprocessing`.
+    *   38.4 Thread-based Parallelism: `threading`. GIL limitation for CPU-bound tasks. Good for I/O. *Objective:* Learn Python's threading and its limitations. *Modules:* `threading`.
+    *   38.5 Introduction to Message Passing Interface (MPI). Standard for distributed memory. *Objective:* Introduce MPI concept.
+    *   38.6 Introduction to OpenMP. Shared memory directives (C/Fortran focus). *Objective:* Briefly introduce OpenMP.
+    *   **Astrophysical Applications:**
+        *   1.  **Data Analysis: Parallel Processing of Multiple FITS Files using `multiprocessing`**
+            *   *Technique Focus:* Applying process-based parallelism (`multiprocessing.Pool`) to embarrassingly parallel tasks (independent file processing) on a single node (Section 38.3). Measuring speedup (Section 38.1).
+            *   *Data Source:* A list of N (e.g., N=20) independent FITS image filenames. A function `analyze_image(filename)` that performs some moderately time-consuming analysis (e.g., load image, find sources using `photutils`, calculate basic stats).
+            *   *Modules Used:* `multiprocessing`, `time`, `os`, `astropy.io.fits`, `photutils` (within function).
+            *   *Processing:* Create list of filenames. Define `analyze_image`. Measure serial execution time using a `for` loop and `time.time()`. Determine number of available cores `n_cores = os.cpu_count()`. Use `with multiprocessing.Pool(processes=n_cores) as pool:` call `results = pool.map(analyze_image, filenames)`. Measure parallel execution time. Calculate speedup = time_serial / time_parallel.
+            *   *Output:* Print serial time, parallel time, number of cores used, and calculated speedup.
+            *   *Test:* Verify speedup is positive and ideally approaches `n_cores` for CPU-bound tasks (minus overhead). Check if results list contains expected output from `analyze_image` for all files.
+            *   *Extension:* Vary the number of processes used in the Pool (from 1 to `n_cores`) and plot speedup vs number of processes. Try using `pool.imap_unordered` instead of `pool.map` and see if performance changes (useful if tasks have varying run times). If the analysis is I/O bound, compare `multiprocessing` with `threading`.
+        *   2.  **Cosmology: Parallel Calculation of Pair Counts (Conceptual)**
+            *   *Technique Focus:* Understanding data parallelism, domain decomposition concepts for a non-embarrassingly parallel problem (Sections 38.2, 38.6). Comparing shared vs distributed memory approaches conceptually.
+            *   *Data Source:* Large catalog of galaxy positions (X, Y, Z).
+            *   *Modules Used:* Conceptual discussion, mention `numpy`, `scipy.spatial.KDTree`.
+            *   *Processing:* Explain the pair counting problem (calculating correlation function requires counting pairs within distance bins). *Shared Memory Approach (`multiprocessing`):* Divide the *outer* loop of the pair counting (iterating through galaxy `i`) among processes, with each process having access to the full galaxy list to find pairs `j > i`. *Distributed Memory Approach (MPI):* Distribute the galaxy catalog itself among processes (domain decomposition). Each process calculates pairs within its local data and potentially cross-pairs with data on neighboring processes (requiring communication).
+            *   *Output:* A textual description comparing the shared memory (`multiprocessing` on one node) and distributed memory (MPI across multiple nodes) approaches for parallelizing the pair counting task, highlighting data access and communication differences.
+            *   *Test:* N/A (Conceptual).
+            *   *Extension:* Write a simple (potentially slow) serial pair counting function using `scipy.spatial.KDTree.query_pairs` or nested loops. Discuss how communication would work in the MPI approach (e.g., sending boundary region data to neighbors).
+
+*   **Chapter 39: Distributed Computing with MPI and `mpi4py`**
+    *   39.1 The MPI Model: Communicator (`MPI.COMM_WORLD`), Rank, Size. Point-to-Point (`send`/`recv`). Blocking/Non-blocking. *Objective:* Understand core MPI concepts and point-to-point communication. *Modules:* `mpi4py.MPI`.
+    *   39.2 Collective Communication (`bcast`, `scatter`, `gather`, `reduce`). *Objective:* Learn common operations involving all processes. *Modules:* `mpi4py.MPI`.
+    *   39.3 Using `mpi4py`: Importing, rank/size, sending/receiving Python objects and NumPy arrays. *Objective:* Learn practical `mpi4py` usage. *Modules:* `mpi4py.MPI`, `numpy`.
+    *   39.4 Parallelizing Simple Loops and Tasks: Distributing work. Load balancing. *Objective:* Apply MPI to parallelize code.
+    *   39.5 Domain Decomposition Strategies. *Objective:* Introduce common simulation parallelization strategy.
+    *   39.6 Running `mpi4py` Scripts on HPC (`mpirun`/`srun`). *Objective:* Learn how to launch MPI jobs. *Modules:* Shell commands.
+    *   **Astrophysical Applications:**
+        *   1.  **Simulation Analysis: Parallel Calculation of Global Average Property**
+            *   *Technique Focus:* Using MPI collective communication (`scatter`, `reduce`) to distribute data and aggregate results across multiple processes/nodes (Sections 39.2, 39.3).
+            *   *Data Source:* Large NumPy array representing particle data (e.g., temperature) loaded by rank 0.
+            *   *Modules Used:* `mpi4py.MPI`, `numpy`.
+            *   *Processing:* Get `comm`, `rank`, `size`. Rank 0 loads/creates full data array. Create `recvbuf` on all ranks. Rank 0 uses `comm.Scatter(sendbuf, recvbuf, root=0)` to distribute data chunks. Each rank calculates the sum of its local data chunk (`local_sum = np.sum(recvbuf)`). Each rank also gets its local count `local_n = len(recvbuf)`. Use `comm.reduce(local_sum, op=MPI.SUM, root=0)` to get `total_sum`. Use `comm.reduce(local_n, op=MPI.SUM, root=0)` to get `total_n`. Rank 0 calculates `global_average = total_sum / total_n`.
+            *   *Output:* Rank 0 prints the calculated global average temperature.
+            *   *Test:* Run the script serially (or with size=1) and calculate the average using standard NumPy; verify the MPI result matches. Run with different numbers of processes (e.g., 2, 4, 8) and check the result remains consistent.
+            *   *Extension:* Use `comm.Bcast` to broadcast the global average calculated by rank 0 back to all other processes. Calculate the standard deviation in parallel using reductions for sum and sum-of-squares. Modify to handle cases where data size is not perfectly divisible by `size`.
+        *   2.  **Data Processing: Parallel Filtering of Large Image (Distributed)**
+            *   *Technique Focus:* Distributing array data (image strips) using `Scatter`/`Gather` for buffer-like data (NumPy arrays), performing local computation (Sections 39.1, 39.2, 39.3).
+            *   *Data Source:* Large 2D NumPy array representing an astronomical image, created/loaded by rank 0.
+            *   *Modules Used:* `mpi4py.MPI`, `numpy`, `scipy.ndimage`.
+            *   *Processing:* Get `comm`, `rank`, `size`. Rank 0 creates image `img`. Calculate chunk size per rank. Create `sendbuf` (full image on rank 0), `recvbuf` (strip size on all ranks), `gatherbuf` (full image size on rank 0). Use `comm.Scatter(sendbuf, recvbuf, root=0)` (note: requires contiguous data, careful with array slicing/copying if needed). Each rank applies filter `filtered_strip = scipy.ndimage.median_filter(recvbuf, size=3)`. Use `comm.Gather(filtered_strip, gatherbuf, root=0)`. Rank 0 now has the full filtered image in `gatherbuf`.
+            *   *Output:* Rank 0 saves the gathered filtered image to a file or displays it (if possible/small enough).
+            *   *Test:* Compare the gathered filtered image from the MPI run with the result of applying the same filter serially to the entire image using SciPy. Check boundaries between strips for correctness (basic example ignores boundary handling).
+            *   *Extension:* Implement proper handling of boundaries between image strips: each process sends its boundary rows to neighbors using `comm.Send`/`comm.Recv` and receives boundary rows from neighbors before applying the filter to have the necessary halo/ghost zone data. Use non-blocking communication (`comm.Isend`/`comm.Irecv`) to overlap communication and computation.
+
+*   **Chapter 40: High-Throughput Computing and Workflow Management**
+    *   40.1 Handling Large Numbers of Independent Tasks (Parameter sweeps, file processing). *Objective:* Introduce high-throughput computing needs.
+    *   40.2 Introduction to Workflow Management Systems (Makeflow, Parsl, Snakemake, Nextflow). *Objective:* Introduce tools for managing complex, multi-step computations.
+    *   40.3 Defining Dependencies and Building DAGs (Directed Acyclic Graphs). *Objective:* Understand how workflows manage task order.
+    *   40.4 Using `Dask` for Parallel Data Analysis: Lazy evaluation, task scheduling. *Objective:* Introduce Dask as a Python-native parallel computing library. *Modules:* `dask`, `dask.distributed`.
+    *   40.5 Dask Data Collections (`dask.array`, `dask.dataframe`, `dask.bag`). Mimicking NumPy/Pandas. *Objective:* Learn Dask's parallel data structures. *Modules:* `dask.array`, `dask.dataframe`, `dask.bag`.
+    *   40.6 Dask Schedulers: Local (threaded/processes) vs. Distributed (HPC cluster). *Objective:* Understand how Dask executes tasks. *Modules:* `dask.distributed` (`Client`).
+    *   **Astrophysical Applications:**
+        *   1.  **Exoplanets: Analyzing Thousands of Light Curves with Dask Bag**
+            *   *Technique Focus:* Using `dask.bag` for simple parallel processing of many independent items (filenames) using familiar functional programming style (`map`, `filter`, `compute`) (Sections 40.4, 40.5, 40.6).
+            *   *Data Source:* A text file `lightcurve_files.txt` listing paths to thousands of individual light curve FITS files.
+            *   *Modules Used:* `dask.bag`, `dask.diagnostics.ProgressBar`, `astropy.io.fits`, `astropy.stats`, `numpy`.
+            *   *Processing:* Define function `calculate_rms(filename)`: opens FITS, reads flux, calculates/returns robust RMS (e.g., `astropy.stats.mad_std`). Create bag `b = db.read_text('lightcurve_files.txt').map(calculate_rms)`. Compute results `results = b.compute()`. Use `ProgressBar().register()` for progress display.
+            *   *Output:* A list containing the RMS value calculated for each light curve file. A histogram plot of the distribution of RMS values.
+            *   *Test:* Run on a small subset of files first. Verify the calculated RMS values are reasonable. Check if computation uses multiple cores locally.
+            *   *Extension:* Set up a Dask Distributed cluster (even locally using `Client()`) and re-run the computation to see how task distribution works. Filter the bag first (`b.filter(lambda filename: 'sector-10' in filename).map(...)`) to only process files from a specific sector. Instead of RMS, run a more complex analysis like a Box Least Squares period search within the `map` function.
+        *   2.  **Image Processing: Defining a Calibration Workflow with Snakemake**
+            *   *Technique Focus:* Defining a multi-step computational workflow with dependencies using a workflow manager (Snakemake) (Sections 40.2, 40.3).
+            *   *Data Source:* Directory with raw science FITS images (`raw/sci_*.fits`), raw bias frames (`raw/bias_*.fits`), raw flat field frames (`raw/flat_*.fits`).
+            *   *Modules Used:* `snakemake` (for `Snakefile`), Python scripts using `astropy.ccdproc` or similar called by rules.
+            *   *Processing:* Create `Snakefile`. Define rule `master_bias`: input=`expand('raw/bias_{i}.fits', i=...)`, output=`'calib/master_bias.fits'`, shell command=`"python combine_bias.py {input} {output}"`. Define rule `master_flat`: input=`expand('raw/flat_{i}.fits', i=...)`, uses master bias, output=`'calib/master_flat.fits'`, shell=`"python combine_flat.py {input} calib/master_bias.fits {output}"`. Define rule `calibrate_science`: input=`raw='raw/sci_{img}.fits', bias='calib/master_bias.fits', flat='calib/master_flat.fits'`, output=`'calib/calibrated_{img}.fits'`, shell=`"python calibrate.py {input.raw} {input.bias} {input.flat} {output}"`. (Helper python scripts need to be created).
+            *   *Output:* The `Snakefile`. Running `snakemake -j 4 calib/calibrated_image1.fits` will execute the necessary steps (combine bias, combine flat, calibrate) potentially in parallel. Calibrated FITS files created in `calib/` directory.
+            *   *Test:* Check timestamps of output files to verify dependencies were respected. Manually run the Python helper scripts to ensure they work correctly. Delete an intermediate file (e.g., `master_flat.fits`) and re-run snakemake to see it gets regenerated.
+            *   *Extension:* Add rules for cosmic ray rejection or background subtraction. Parameterize rules (e.g., flat field filter name). Configure Snakemake to submit jobs to an HPC cluster scheduler (e.g., SLURM) instead of running locally.
+
+*   **Chapter 41: GPU Computing for Astrophysics**
+    *   41.1 Introduction to GPUs: Architecture (many cores), SIMD/SIMT. *Objective:* Understand GPU architecture basics.
+    *   41.2 CUDA and OpenCL Programming Models: Kernels, host/device code. *Objective:* Introduce GPU programming concepts.
+    *   41.3 Python Libraries: `CuPy` (NumPy on GPU), `Numba` (`@cuda.jit`). *Objective:* Introduce Python tools for GPU computing. *Modules:* `cupy`, `numba.cuda`.
+    *   41.4 Accelerating NumPy Operations with `CuPy`. Array creation, syntax, memory transfer. *Objective:* Learn easy GPU acceleration via CuPy. *Modules:* `cupy`, `numpy`.
+    *   41.5 Writing Custom CUDA Kernels with `Numba`. Decorator, kernel launch, memory management. *Objective:* Learn to write custom GPU kernels in Python. *Modules:* `numba.cuda`, `numpy`, `math`.
+    *   41.6 When to Use GPUs: Arithmetic intensity, data parallelism, transfer overhead. *Objective:* Understand suitability of problems for GPUs.
+    *   **Astrophysical Applications:**
+        *   1.  **Radio Astronomy/Pulsars: Accelerating De-dispersion with CuPy**
+            *   *Technique Focus:* Using `CuPy` as a drop-in replacement for `NumPy` to accelerate array operations (FFTs, multiplications) involved in de-dispersion (Section 41.4).
+            *   *Data Source:* Simulated or real radio telescope filterbank data (frequency-time array, shape N_channels x N_samples). Dispersion Measure (DM) value.
+            *   *Modules Used:* `cupy` as cp, `numpy` as np, `time`.
+            *   *Processing:* Load/create data `cpu_data` (N_chan x N_time). Define frequencies `freqs` (N_chan). Calculate time delays per channel `delays = 4.15e3 * DM * (freqs**-2 - freqs_ref**-2)`. Perform de-dispersion using FFTs: `cpu_fft = np.fft.fft(cpu_data, axis=1)`; create frequency-dependent phase shifts based on `delays`; apply shifts `cpu_fft *= phase_shifts`; inverse FFT `cpu_dedispersed = np.fft.ifft(cpu_fft, axis=1)`. Time this NumPy version. Repeat the *exact same* calculation steps but using `cp` instead of `np` (e.g., `gpu_data = cp.asarray(cpu_data)`, `gpu_fft = cp.fft.fft(...)`, etc.). Time the CuPy version (including data transfer to/from GPU, use `cp.cuda.Stream.null.synchronize()`).
+            *   *Output:* Print CPU execution time and GPU execution time (including transfers). Calculate and print speedup.
+            *   *Test:* Verify the `cupy` de-dispersed result (transferred back to CPU using `.get()`) is numerically very close to the `numpy` result. Ensure timings include synchronization.
+            *   *Extension:* Vary the size of the input data (N_channels, N_samples) and plot the speedup factor vs data size. Implement the de-dispersion using direct time-domain shifts (more complex but avoids FFTs) and compare performance. Use CuPy streams for potentially overlapping data transfers and computation.
+        *   2.  **Cosmology/Simulations: Simple N-body Force Calculation Kernel with Numba**
+            *   *Technique Focus:* Writing a custom GPU kernel using `numba.cuda.jit` for a computationally intensive, data-parallel task (pairwise force calculation) (Section 41.5).
+            *   *Data Source:* NumPy array of particle positions `pos` (N x 3). Particle masses `mass` (N). Gravitational softening length `eps`.
+            *   *Modules Used:* `numba.cuda`, `numpy`, `math`.
+            *   *Processing:* Define CUDA kernel `force_kernel(pos, mass, acc_out, N, eps)` decorated with `@cuda.jit`. Inside kernel, determine global thread index `i = cuda.grid(1)`. If `i < N`, loop through `j` from 0 to N-1. If `i != j`, calculate distance vector `dr`, squared distance `dist_sq`, force magnitude `F = G * mass[j] / (dist_sq + eps*eps)`, accumulate acceleration components `acc_x, acc_y, acc_z`. Use `cuda.atomic.add(acc_out, (3*i + 0), acc_x)` etc. to safely accumulate forces (simple but potentially slow due to atomics for this naive implementation). Allocate GPU arrays `d_pos = cuda.to_device(pos)`, `d_mass = cuda.to_device(mass)`, `d_acc = cuda.device_array_like(acc_template)`. Configure blocks/grids. Launch kernel `force_kernel[blockspergrid, threadsperblock](d_pos, d_mass, d_acc, N, eps)`. Copy result back `acc = d_acc.copy_to_host()`.
+            *   *Output:* The calculated acceleration array `acc` for all particles, computed on the GPU.
+            *   *Test:* Compare the GPU-calculated acceleration for a few particles with a direct serial calculation in NumPy/Python for a small N. Check for correctness.
+            *   *Extension:* Implement a more efficient parallel reduction strategy within the kernel instead of using atomics for force accumulation. Compare performance against a CPU implementation (serial and potentially using `numba.prange` for parallel CPU). Use shared memory within the kernel for optimization (advanced).
+
+*   **Chapter 42: Efficient I/O and Data Handling at Scale**
+    *   42.1 I/O Bottlenecks in HPC. Shared file system contention. *Objective:* Understand I/O limitations.
+    *   42.2 Parallel File Systems (Lustre, GPFS). Architecture, striping. *Objective:* Introduce parallel file system concepts.
+    *   42.3 Efficient Data Formats for Parallel I/O (Parallel HDF5). *Objective:* Introduce parallel-aware file formats. *Modules:* `h5py` (parallel build).
+    *   42.4 Using `h5py` with Parallel HDF5 (`driver='mpio'`, collective/independent I/O). *Objective:* Learn practical parallel HDF5 usage. *Modules:* `h5py`, `mpi4py.MPI`.
+    *   42.5 Data Compression Techniques (gzip, lzf, etc.). Tradeoffs. *Objective:* Understand compression options. *Modules:* `h5py`.
+    *   42.6 Strategies for Checkpointing Large Simulations/Analyses. *Objective:* Learn how to save/restart long jobs.
+    *   **Astrophysical Applications:**
+        *   1.  **Simulation I/O: Writing Parallel HDF5 Checkpoint File**
+            *   *Technique Focus:* Using `mpi4py` and `h5py` (compiled with parallel support) to write different parts of a large dataset from multiple processes into a single HDF5 file concurrently (Sections 42.3, 42.4).
+            *   *Data Source:* Large NumPy arrays representing simulation state (e.g., particle positions, velocities) distributed across MPI ranks (e.g., each rank holds N/size particles).
+            *   *Modules Used:* `h5py`, `mpi4py.MPI`, `numpy`. (Requires parallel `h5py` installation).
+            *   *Processing:* Get `comm`, `rank`, `size`. Each rank has its local data `local_pos`, `local_vel`. Calculate offset `start = rank * local_N`, `end = start + local_N`. Open HDF5 file `f = h5py.File('checkpoint.hdf5', 'w', driver='mpio', comm=comm)`. Collectively create datasets `dset_pos = f.create_dataset('position', (total_N, 3), dtype='f8')`. Each process writes its local data to the correct slice: `dset_pos[start:end, :] = local_pos`. Repeat for velocity. Close file `f.close()`.
+            *   *Output:* A single HDF5 file `checkpoint.hdf5` containing the combined data written by all processes. Confirmation message from each rank upon write completion.
+            *   *Test:* Run the script with multiple MPI processes. After execution, use `h5dump checkpoint.hdf5` or load the file serially in Python to verify the datasets have the correct total size and contain data (check slices corresponding to different ranks).
+            *   *Extension:* Add attributes to the HDF5 file (e.g., simulation time, number of particles) – attributes should typically be written only by rank 0 after opening the file. Use collective I/O mode (`with dset.collective:` block) for potentially better performance on some systems, especially for contiguous writes. Add compression to the datasets (`f.create_dataset(..., compression='gzip')`) and compare file size and write time.
+        *   2.  **Large Survey Analysis: Parallel Reading of Data Subsets from HDF5**
+            *   *Technique Focus:* Using `mpi4py` and parallel `h5py` for parallel reading of different slices of a large dataset by multiple processes (Sections 42.3, 42.4).
+            *   *Data Source:* A single, large HDF5 file (`survey_catalog.hdf5`) containing a multi-column dataset (e.g., `/data/photometry`, size TotalRows x N_bands), stored on a parallel file system.
+            *   *Modules Used:* `h5py`, `mpi4py.MPI`, `numpy`. (Requires parallel `h5py`).
+            *   *Processing:* Get `comm`, `rank`, `size`. Calculate row slice for each rank: `rows_per_rank = TotalRows // size`, `start = rank * rows_per_rank`, `end = (rank + 1) * rows_per_rank` (handle remainder). Open HDF5 file `f = h5py.File('survey_catalog.hdf5', 'r', driver='mpio', comm=comm)`. Access dataset `dset = f['/data/photometry']`. Each rank reads its slice: `local_data = dset[start:end, :]`. Each rank performs local analysis (e.g., `local_mean = np.mean(local_data[:, 0])` for first band). Print rank and local mean.
+            *   *Output:* Each MPI process prints its rank and the mean value calculated from its assigned chunk of data.
+            *   *Test:* Verify that each rank reads a unique slice (check `start`/`end` values). Check if the local means seem reasonable. For small test file, compare results to serial calculation.
+            *   *Extension:* Use `comm.reduce` to calculate the global mean across all processes from the `local_mean` values (remembering to weight by `local_N` if chunks are uneven). Read non-contiguous data based on some selection criteria (more complex, might require multiple reads or reading larger chunks and filtering locally). Compare performance of independent vs collective reading modes.
+
+---
+
+**Appendices**
+
+*   **Appendix I: Python Programming Essentials**
+    *   A1.1 Setting up: Anaconda, `conda` environments, `pip`, Jupyter. *Objective:* Get Python environment ready.
+    *   A1.2 Basics: Syntax, variables, types (int, float, str, bool, list, tuple, dict, set). *Objective:* Core language elements.
+    *   A1.3 Control Flow: `if`/`elif`/`else`, `for`, `while`, `break`, `continue`, comprehensions. *Objective:* Control program execution.
+    *   A1.4 Functions: `def`, arguments, return values, scope, lambdas. *Objective:* Write reusable code blocks.
+    *   A1.5 Modules/Packages: `import`, `from ... import`, creating modules. *Objective:* Organize and reuse code.
+    *   A1.6 NumPy: Array creation, dtypes, shape, indexing/slicing, broadcasting, ufuncs, `linalg`. *Objective:* Introduce fundamental array computing. *Modules:* `numpy`.
+    *   A1.7 SciPy: Overview (`optimize`, `integrate`, `stats`, `interpolate`, `fft`, `linalg`). Example. *Objective:* Introduce core scientific routines. *Modules:* `scipy`.
+    *   A1.8 File Handling: `open()`, modes, `with`, read/write text/binary. *Objective:* Basic file I/O. *Modules:* `builtins`.
+    *   A1.9 OOP Intro: `class`, objects, attributes, methods, `__init__`, `self`. *Objective:* Introduce object-oriented concepts.
+    *   A1.10 Version Control: Git basics (`init`, `add`, `commit`, `status`, `log`, `push`, `pull`, `clone`), GitHub/GitLab. *Objective:* Introduce essential tool for code management and collaboration.
+
+*   **Appendix II: Key Python Modules for Astrophysics (Quick Reference)**
+    *   *Objective:* Provide a quick lookup guide to relevant packages, organized by the book's structure.
+    *   **Part I: Data Representation**
+        *   `astropy`: `io.fits`, `table`, `units`, `constants`, `wcs`, `time`, `coordinates`, `visualization` (basics), `io.votable`
+        *   `numpy`: Core array manipulation.
+        *   `pandas`: Alternative table manipulation, CSV reading.
+        *   `h5py`: HDF5 file interaction.
+        *   `matplotlib`: Core plotting.
+    *   **Part II: Databases and Archives**
+        *   `astroquery`: Core library for accessing online services (submodules: `simbad`, `ned`, `vizier`, `mast`, `sdss`, `gaia`, `jplhorizons`, `vo_conesearch`, `vo_sia`, `vo_ssa`, `utils.tap.core`).
+        *   `pyvo`: Alternative, more general VO library (especially for TAP).
+        *   `requests`, `arxiv`, `feedparser`: Generic web/feed access.
+        *   `sqlite3`: Local SQLite databases.
+        *   `sqlalchemy`: More advanced SQL interface/ORM (optional).
+    *   **Part III: Astrostatistics**
+        *   `numpy`: Basic stats (`mean`, `std`, `median`), random numbers (`random`).
+        *   `scipy.stats`: Distributions, hypothesis tests (ttest, chisquare, kstest), descriptive stats.
+        *   `scipy.optimize`: Function minimization (`minimize`), curve fitting (`curve_fit`).
+        *   `astropy.stats`: Astro-specific stats (`sigma_clip`, `mad_std`, `bootstrap`, Lomb-Scargle).
+        *   `astropy.modeling`: Model fitting framework.
+        *   `emcee`, `dynesty`: MCMC / Nested Sampling libraries.
+        *   `corner`: Plotting MCMC posteriors.
+        *   `statsmodels`: More comprehensive statistical models (time series, GLMs - optional).
+        *   `uncertainties`: Automatic error propagation (optional).
+    *   **Part IV: Machine Learning**
+        *   `scikit-learn` (`sklearn`): Core ML library (submodules: `preprocessing`, `impute`, `linear_model`, `svm`, `tree`, `ensemble`, `cluster`, `decomposition`, `manifold`, `metrics`, `model_selection`, `pipeline`).
+        *   `pandas`: Data preparation and feature handling.
+        *   `numpy`: Feature array manipulation.
+        *   `matplotlib`, `seaborn`: Visualization.
+        *   `imblearn`: Handling imbalanced datasets (optional).
+        *   `tensorflow`, `torch`: Deep learning frameworks (optional).
+        *   `umap-learn`: UMAP dimensionality reduction (optional).
+    *   **Part V: LLMs in Astrophysics**
+        *   `transformers`: Hugging Face library (models, tokenizers, pipelines).
+        *   `openai`: OpenAI API client library.
+        *   `langchain`: Framework for building LLM applications (RAG, agents - optional).
+        *   `sentence-transformers`: Generating text embeddings (optional).
+        *   `faiss`, `chromadb`: Vector databases for RAG (optional).
+        *   `nltk`, `spacy`: Traditional NLP libraries (optional).
+    *   **Part VI: Simulations**
+        *   `numpy`: Array math for simple simulations/analysis.
+        *   `scipy.integrate`: ODE solvers (`solve_ivp`).
+        *   `scipy.spatial`: Spatial algorithms (KDTree for pair finding).
+        *   `h5py`: Reading/writing simulation snapshots (HDF5).
+        *   `yt`: Analysis and visualization of grid/particle simulation data.
+        *   `galpy`: Galactic dynamics toolkit (potentials, orbits).
+        *   `astropy.convolution`: Applying PSFs to mock images.
+        *   `python-fsps`, `prospector`: Stellar Population Synthesis (external, for mock spectra - optional).
+    *   **Part VII: High-Performance Computing**
+        *   `multiprocessing`: Process-based parallelism (single node).
+        *   `threading`: Thread-based parallelism (single node, GIL issues).
+        *   `mpi4py`: MPI bindings for distributed memory parallelism.
+        *   `dask`: Task scheduling, parallel arrays/dataframes (`dask.array`, `dask.dataframe`, `dask.bag`, `dask.distributed`).
+        *   `cupy`: NumPy on NVIDIA GPUs.
+        *   `numba`: JIT compiler, including CUDA kernel generation (`numba.cuda`).
+        *   `h5py` (parallel build): Parallel HDF5 I/O.
+        *   `snakemake`, `nextflow`, `parsl`: Workflow management systems (external).
 
 
