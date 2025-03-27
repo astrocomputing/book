@@ -61,7 +61,7 @@ Building upon the foundational understanding of basic data formats like plain te
 
 -    [Chapter 7: Introduction to Astronomical Surveys and Archives](chapter-07.md)
 -    [Chapter 8: The Virtual Observatory (VO)](chapter-08.md)
--    Chapter 9: Accessing Catalog Data with Astroquery
+-    [Chapter 9: Accessing Catalog Data with Astroquery](chapter-09.md)
 -    Chapter 10: Retrieving Image and Spectral Data
 -    Chapter 11: Advanced Database Queries with ADQL and TAP
 -    Chapter 12: Managing Large Datasets and Local Databases
