@@ -1323,7 +1323,7 @@ print("-" * 20)
 **Extensions** for deeper understanding could include: 1) Converting the `FITS_rec` object into an `astropy.table.Table` using `Table(table_data)` and exploring the additional functionalities offered by the Table object (Chapter 2). 2) Filtering the data based on column values (e.g., select only stars with parallax > 2 mas) directly using NumPy boolean indexing on the extracted column arrays. 3) Creating a plot of parallax vs. G magnitude using the extracted NumPy columns with `matplotlib.pyplot`. 4) Writing the extracted data (or a modified version) to a new FITS table using `fits.BinTableHDU.from_columns()` and `fits.writeto()`.
 
 
-**Chapter 1 Summary**
+**Chapter Summary**
 
 This chapter lays the essential groundwork for astrocomputing by addressing the fundamental ways astrophysical data are represented and accessed. It begins by highlighting the challenges posed by the massive and complex datasets in modern astronomy and the critical need for standardized formats to ensure data portability, self-description, and long-term usability. While acknowledging the continued presence of simpler plain text formats like ASCII, CSV, and TSV, the chapter details their inherent ambiguities regarding metadata, delimiters, and missing values, while introducing Python tools like built-in file I/O, `numpy.loadtxt`, and the versatile `pandas.read_csv` for handling them. The focus then shifts decisively to the Flexible Image Transport System (FITS), the cornerstone standard in astronomy. Its core principles, structure based on Header Data Units (HDUs) containing ASCII headers (Keyword = Value / Comment cards) and optional binary data units, are explained, emphasizing how embedded metadata provides vital context.
 
