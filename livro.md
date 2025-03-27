@@ -46,12 +46,12 @@ Astrocomputing is a vibrant, rapidly evolving field that empowers astrophysical 
 **Introduction**
 
 **Part I: Representing Astrophysical Data**
-    Chapter 1: Foundations of Astrophysical Data Formats
-    Chapter 2: Advanced Data Structures and Formats
-    Chapter 3: Units, Quantities, and Constants
-    Chapter 4: World Coordinate Systems (WCS)
-    Chapter 5: Time and Coordinate Representations
-    Chapter 6: Data Visualization Fundamentals
+-    Chapter 1: Foundations of Astrophysical Data Formats
+-    Chapter 2: Advanced Data Structures and Formats
+-    Chapter 3: Units, Quantities, and Constants
+-    Chapter 4: World Coordinate Systems (WCS)
+-    Chapter 5: Time and Coordinate Representations
+-    Chapter 6: Data Visualization Fundamentals
 
 **Part II: Astrophysical Databases and Archives**
     Chapter 7: Introduction to Astronomical Surveys and Archives
