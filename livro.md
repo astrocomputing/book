@@ -54,28 +54,28 @@ Astrocomputing is a vibrant, rapidly evolving field that empowers astrophysical 
 -    Chapter 6: Data Visualization Fundamentals
 
 **Part II: Astrophysical Databases and Archives**
-    Chapter 7: Introduction to Astronomical Surveys and Archives
-    Chapter 8: The Virtual Observatory (VO)
-    Chapter 9: Accessing Catalog Data with Astroquery
-    Chapter 10: Retrieving Image and Spectral Data
-    Chapter 11: Advanced Database Queries with ADQL and TAP
-    Chapter 12: Managing Large Datasets and Local Databases
+-    Chapter 7: Introduction to Astronomical Surveys and Archives
+-    Chapter 8: The Virtual Observatory (VO)
+-    Chapter 9: Accessing Catalog Data with Astroquery
+-    Chapter 10: Retrieving Image and Spectral Data
+-    Chapter 11: Advanced Database Queries with ADQL and TAP
+-    Chapter 12: Managing Large Datasets and Local Databases
 
 **Part III: Astrostatistics**
-    Chapter 13: Probability, Random Variables, and Distributions
-    Chapter 14: Descriptive Statistics and Error Analysis
-    Chapter 15: Hypothesis Testing
-    Chapter 16: Parameter Estimation: Likelihood Methods
-    Chapter 17: Parameter Estimation: Bayesian Methods
-    Chapter 18: Model Fitting and Model Selection
+-    Chapter 13: Probability, Random Variables, and Distributions
+-    Chapter 14: Descriptive Statistics and Error Analysis
+-    Chapter 15: Hypothesis Testing
+-    Chapter 16: Parameter Estimation: Likelihood Methods
+-    Chapter 17: Parameter Estimation: Bayesian Methods
+-    Chapter 18: Model Fitting and Model Selection
 
 **Part IV: Machine Learning in Astrophysics**
-    Chapter 19: Introduction to Machine Learning Concepts
-    Chapter 20: Data Preprocessing for Machine Learning
-    Chapter 21: Supervised Learning: Regression
-    Chapter 22: Supervised Learning: Classification
-    Chapter 23: Unsupervised Learning: Clustering and Dimensionality Reduction
-    Chapter 24: Introduction to Deep Learning
+-    Chapter 19: Introduction to Machine Learning Concepts
+-    Chapter 20: Data Preprocessing for Machine Learning
+-    Chapter 21: Supervised Learning: Regression
+-    Chapter 22: Supervised Learning: Classification
+-    Chapter 23: Unsupervised Learning: Clustering and Dimensionality Reduction
+-    Chapter 24: Introduction to Deep Learning
 
 **Part V: Large Language Models (LLMs) in Astrophysics**
     Chapter 25: Introduction to LLMs and Natural Language Processing (NLP)
@@ -86,20 +86,20 @@ Astrocomputing is a vibrant, rapidly evolving field that empowers astrophysical 
     Chapter 30: Ethical Considerations and Future of LLMs in Astrophysics
 
 **Part VI: Astrophysical Simulations**
-    Chapter 31: Introduction to Astrophysical Modeling and Simulation
-    Chapter 32: Numerical Methods Basics
-    Chapter 33: N-Body Simulations
-    Chapter 34: Hydrodynamical Simulations
-    Chapter 35: Analyzing Simulation Data with `yt`
-    Chapter 36: Comparing Simulations with Observations
+-    Chapter 31: Introduction to Astrophysical Modeling and Simulation
+-    Chapter 32: Numerical Methods Basics
+-    Chapter 33: N-Body Simulations
+-    Chapter 34: Hydrodynamical Simulations
+-    Chapter 35: Analyzing Simulation Data with `yt`
+-    Chapter 36: Comparing Simulations with Observations
 
 **Part VII: High-Performance Computing (HPC) for Astrophysics**
-    Chapter 37: Introduction to HPC Environments
-    Chapter 38: Parallel Programming Fundamentals
-    Chapter 39: Distributed Computing with MPI and `mpi4py`
-    Chapter 40: High-Throughput Computing and Workflow Management
-    Chapter 41: GPU Computing for Astrophysics
-    Chapter 42: Efficient I/O and Data Handling at Scale
+-    Chapter 37: Introduction to HPC Environments
+-    Chapter 38: Parallel Programming Fundamentals
+-    Chapter 39: Distributed Computing with MPI and `mpi4py`
+-    Chapter 40: High-Throughput Computing and Workflow Management
+-    Chapter 41: GPU Computing for Astrophysics
+-    Chapter 42: Efficient I/O and Data Handling at Scale
 
 **Appendix I: Python Programming Essentials**
 
