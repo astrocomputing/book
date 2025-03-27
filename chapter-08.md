@@ -530,7 +530,6 @@ In conclusion, VO Registries serve as the essential discovery mechanism for the 
 
 **Output, Testing, and Extension:** The primary output is the `astropy.table.Table` containing the list of objects found. Printing key columns and the total count provides a summary. **Testing** involves verifying the coordinates returned are indeed within the specified radius of M31's center and checking if the object types seem plausible. Comparing the results (e.g., the count or specific objects) with a manual query via the SIMBAD web interface provides validation. **Extensions** could include varying the search radius, querying around different targets, querying other SCS services (like NED), plotting the positions of the found objects using `matplotlib` and `SkyCoord`, or cross-matching the SIMBAD results with another catalog (e.g., Gaia) using positional matching techniques (Sec 5.5 or Chapter 11).
 
-*(Code example identical to the one provided in the previous response for Application 8.A)*
 ```python
 # --- Code Example: Application 8.A ---
 # Note: Requires installation: pip install astroquery
@@ -636,7 +635,7 @@ print("-" * 20)
 
 **Output, Testing, and Extension:** The main output is the `metadata_table` containing information about spectra matching the query. Printing key metadata fields and the access URL demonstrates successful discovery. **Testing** involves verifying that if a spectrum is known to exist at the target coordinates, the query returns it. Check that the coordinates in the result table match the input. Try the retrieved `access_url` to confirm it leads to a valid data file (likely a FITS spectrum). Querying a blank region should yield zero results. **Extensions** could include adding a `BAND` parameter to the SSA query to search for spectra covering a specific wavelength range, downloading the spectrum FITS file using the `access_url` (e.g., with `astroquery.utils.download_file`), and then using `astropy.io.fits` and potentially `specutils` (Chapter 10) to read and plot the spectrum. One could also write a script to perform SSA queries for a list of targets.
 
-*(Code example identical to the one provided in the previous response for Application 8.B)*
+
 ```python
 # --- Code Example: Application 8.B ---
 # Note: Requires installation: pip install pyvo
