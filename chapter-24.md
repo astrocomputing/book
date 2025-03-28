@@ -802,7 +802,7 @@ Two crucial specialized architectures were then introduced. **Convolutional Neur
 
 ---
 
-**References for Further Reading (APA Format, 7th Edition):**
+**References for Further Reading:**
 
 1.  **Goodfellow, I., Bengio, Y., & Courville, A. (2016).** *Deep Learning*. MIT Press. [http://www.deeplearningbook.org/](http://www.deeplearningbook.org/)
     *(A comprehensive textbook covering the foundations and modern techniques of deep learning, including ANNs, CNNs, RNNs, optimization, regularization, etc. Mathematically rigorous.)*
