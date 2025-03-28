@@ -277,7 +277,7 @@ Understanding the bias-variance tradeoff is fundamental to diagnosing model perf
     *   **Labels (y):** None. The algorithm (e.g., K-Means, DBSCAN, Gaussian Mixture Model - Chapter 23) assigns cluster labels based on the feature space structure.
     *   **Evaluation:** Assess cluster quality using internal metrics (like Silhouette Score) or by comparing the resulting cluster assignments to existing (but unused during clustering) taxonomic labels (external validation). Visualize clusters in feature space (e.g., color-color plots, or using dimensionality reduction like PCA/UMAP - Chapter 23).
 
-**(Paragraph 7)** **Scenario 2: Supervised Classification (Predicting Known Classes):**
+**Scenario 2: Supervised Classification (Predicting Known Classes):**
     *   **Goal:** Train a model to predict the *existing* taxonomic class (e.g., Bus-DeMeo class) of an asteroid based on its observable features (colors, albedo). This is useful for classifying asteroids for which full spectra (needed for definitive classification) are unavailable but photometry exists.
     *   **ML Paradigm:** **Supervised Learning**, specifically **Multi-class Classification**.
     *   **Features (X):** The same set of features as in the unsupervised case (colors, albedo, etc.).
