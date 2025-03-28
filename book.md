@@ -67,12 +67,15 @@ Building upon the foundational understanding of basic data formats like plain te
 -    [Chapter 12: Managing Large Datasets and Local Databases](chapter-12.md)
 
 **Part III: Astrostatistics**
--    Chapter 13: Probability, Random Variables, and Distributions
--    Chapter 14: Descriptive Statistics and Error Analysis
--    Chapter 15: Hypothesis Testing
--    Chapter 16: Parameter Estimation: Likelihood Methods
--    Chapter 17: Parameter Estimation: Bayesian Methods
--    Chapter 18: Model Fitting and Model Selection
+
+With the foundational skills for accessing, representing, and handling diverse astrophysical datasets now established in Parts I and II, Part III: Astrostatistics pivots to the critical task of extracting meaningful scientific knowledge from this data through the application of rigorous statistical methods. Astronomical data, whether from observations or simulations, is inherently imperfect – subject to measurement noise, systematic uncertainties, selection biases, and often representing only a finite sample of a larger underlying population or process. Simply plotting data or calculating basic averages is rarely sufficient; robust statistical inference is required to quantify relationships, test hypotheses, estimate parameters of physical models, and understand the significance and uncertainty associated with our findings. This part provides a practical guide to the core statistical concepts and computational techniques essential for modern astrophysical data analysis, implemented primarily using Python's scientific libraries like SciPy, NumPy, and Astropy, alongside specialized tools for advanced inference. We begin by reviewing fundamental probability theory, common distributions encountered in astronomy (Gaussian, Poisson, Power-Law), and methods for generating random samples. We then cover essential descriptive statistics, error propagation techniques, and robust methods for handling outliers. The framework of statistical hypothesis testing is introduced, demonstrating common tests (t-test, Chi-squared, K-S) for comparing datasets or evaluating goodness-of-fit. The crucial task of parameter estimation is explored through two major paradigms: frequentist Maximum Likelihood Estimation (MLE) using optimization techniques, and the increasingly powerful Bayesian inference approach, focusing on Markov Chain Monte Carlo (MCMC) methods for exploring posterior probability distributions using libraries like emcee and dynesty. Finally, we address the practicalities of fitting models to data and the important challenge of model selection – objectively comparing the performance of different physical models using both frequentist (AIC, BIC, LRT) and Bayesian (Evidence, Bayes Factors) criteria. Throughout this part, the emphasis remains on practical implementation and interpretation in an astrophysical context, equipping readers with the statistical toolkit needed to draw reliable conclusions from complex data.
+
+-    [Chapter 13: Probability, Random Variables, and Distributions](chapter-13.md)
+-    [Chapter 14: Descriptive Statistics and Error Analysis](chapter-14.md)
+-    [Chapter 15: Hypothesis Testing](chapter-15.md)
+-    [Chapter 16: Parameter Estimation: Likelihood Methods](chapter-16.md)
+-    [Chapter 17: Parameter Estimation: Bayesian Methods](chapter-17.md)
+-    [Chapter 18: Model Fitting and Model Selection](chapter-18.md)
 
 **Part IV: Machine Learning in Astrophysics**
 -    Chapter 19: Introduction to Machine Learning Concepts
