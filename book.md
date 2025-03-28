@@ -78,12 +78,15 @@ With the foundational skills for accessing, representing, and handling diverse a
 -    [Chapter 18: Model Fitting and Model Selection](chapter-18.md)
 
 **Part IV: Machine Learning in Astrophysics**
--    Chapter 19: Introduction to Machine Learning Concepts
--    Chapter 20: Data Preprocessing for Machine Learning
--    Chapter 21: Supervised Learning: Regression
--    Chapter 22: Supervised Learning: Classification
--    Chapter 23: Unsupervised Learning: Clustering and Dimensionality Reduction
--    Chapter 24: Introduction to Deep Learning
+
+Transitioning from the classical statistical inference techniques covered in Part III, Part IV: Machine Learning in Astrophysics explores a powerful and rapidly evolving set of computational methods designed to learn patterns, make predictions, and uncover hidden structures directly from data, often without relying on explicit physical models. As astronomical datasets continue to explode in size and complexity, machine learning (ML) algorithms are becoming increasingly indispensable tools for tackling challenges that are intractable with traditional methods. This part provides a practical introduction to core ML concepts and their application to astrophysical problems using Python, primarily leveraging the comprehensive scikit-learn library. We begin by establishing the fundamental concepts: defining machine learning, differentiating between supervised learning (regression for predicting continuous values, classification for assigning labels) and unsupervised learning (clustering for finding groups, dimensionality reduction for simplifying data), introducing key terminology like features and labels, and outlining the typical ML workflow from data preparation to model evaluation . Recognizing that raw data is rarely suitable for direct ML input, we then delve into essential data preprocessing techniques, including handling missing values, scaling features for algorithm compatibility, encoding non-numeric data, and basic feature engineering. The subsequent chapters focus on specific learning paradigms: supervised regression techniques like Linear Regression, Support Vector Regression, and Random Forests are explored for tasks such as predicting photometric redshifts or stellar parameters ; supervised classification methods including Logistic Regression, Support Vector Machines, and Random Forests are applied to problems like identifying transient events or classifying galaxy morphologies; and unsupervised learning approaches are demonstrated, covering clustering algorithms (K-Means, DBSCAN) for finding groups like star clusters or co-moving stars, and dimensionality reduction techniques (PCA, t-SNE, UMAP) for visualizing and finding dominant patterns in high-dimensional data like spectra. Finally, we provide a conceptual introduction to the powerful realm of deep learning, explaining the basics of Artificial Neural Networks (ANNs), Convolutional Neural Networks (CNNs) ideal for image analysis, and Recurrent Neural Networks (RNNs) suited for time-series data, mentioning key frameworks like TensorFlow and PyTorch. Throughout this part, the emphasis is on practical implementation, understanding the strengths and weaknesses of different algorithms, proper model evaluation, and applying these techniques to realistic astrophysical datasets and problems.
+
+-    [Chapter 19: Introduction to Machine Learning Concepts](chapter-19.md)
+-    [Chapter 20: Data Preprocessing for Machine Learning](chapter-20.md)
+-    [Chapter 21: Supervised Learning: Regression](chapter-21.md)
+-    [Chapter 22: Supervised Learning: Classification](chapter-22.md)
+-    [Chapter 23: Unsupervised Learning: Clustering and Dimensionality Reduction](chapter-23.md)
+-    [Chapter 24: Introduction to Deep Learning](chapter-24.md)
 
 **Part V: Large Language Models (LLMs) in Astrophysics**
 -    Chapter 25: Introduction to LLMs and Natural Language Processing (NLP)
