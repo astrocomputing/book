@@ -143,14 +143,14 @@ Complementing the numerical, statistical, machine learning, and high-performance
 
 Marking a transformative era in our exploration of the cosmos, Part IX: Astrocomputing for Multi-Messenger Astronomy addresses the computational challenges and opportunities presented by observing the Universe through fundamentally different physical "messengers" beyond the traditional electromagnetic spectrum. For centuries, astronomy relied solely on photons (light across all wavelengths), but recent decades have opened new windows through the detection of gravitational waves, high-energy neutrinos, and potentially ultra-high-energy cosmic rays, each carrying unique information about the most energetic and enigmatic events in the cosmos, such as merging black holes and neutron stars, supernovae, gamma-ray bursts, and active galactic nuclei. Combining information from these diverse messengers – photons, gravitational waves, neutrinos, and cosmic rays – allows for a much richer, more complete understanding of these astrophysical sources and the fundamental physics governing them than any single messenger can provide alone. This part delves into the specific computational techniques required to detect signals, analyze data, interpret results, and synergize information across these different messenger domains. We begin by laying the observational and theoretical foundations, outlining the key messengers, their detection methods, the types of sources they probe, and the scientific motivations driving multi-messenger astrophysics. Subsequent sections explore the distinct data characteristics and computational analysis techniques associated with each major observational window – radio, infrared, optical/UV, X-ray, gamma-ray, neutrino, gravitational wave, and cosmic ray astronomy – highlighting relevant Python tools and libraries for processing and interpreting data within each domain. The culmination of this part focuses on the critical challenge and immense potential of multi-messenger data fusion and joint analysis, discussing strategies for associating signals across different messengers (temporal and spatial coincidence), performing combined parameter estimation and model testing using information from multiple probes simultaneously, and leveraging computational tools to maximize the scientific return from coordinated multi-messenger observing campaigns targeting transient and high-energy phenomena, thereby pushing the frontiers of our understanding of the extreme Universe.
 
-[**Chapter 51:** Foundations of Multi-Messenger Astronomy (MMA)]
-[**Chapter 52:** Computational Techniques in Radio Astronomy]
-[**Chapter 53:** Computational Techniques in Infrared Astronomy]
-[**Chapter 54:** Computational Techniques in Optical/UV Astronomy]
-[**Chapter 55:** Computational Techniques in X-ray Astronomy]
-[**Chapter 56:** Computational Techniques in Gamma-ray and Neutrino Astronomy]
-[**Chapter 57:** Computational Techniques in Gravitational Wave Astronomy]
-[**Chapter 58:** Integrating Multi-Messenger Data]
+-  [**Chapter 51:** Foundations of Multi-Messenger Astronomy (MMA)](chapter-51.md)
+-  [**Chapter 52:** Computational Techniques in Radio Astronomy](chapter-52.md)
+-  [**Chapter 53:** Computational Techniques in Infrared Astronomy](chapter-53.md)
+-  [**Chapter 54:** Computational Techniques in Optical/UV Astronomy](chapter-54.md)
+-  [**Chapter 55:** Computational Techniques in X-ray Astronomy](chapter-55.md)
+-  [**Chapter 56:** Computational Techniques in Gamma-ray and Neutrino Astronomy](chapter-56.md)
+-  [**Chapter 57:** Computational Techniques in Gravitational Wave Astronomy](chapter-57.md)
+-  [**Chapter 58:** Integrating Multi-Messenger Data](chapter-58.md)
 
 **Appendices: Astrocomputing Toolkit and Development Practices**
 
