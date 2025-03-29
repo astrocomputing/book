@@ -1,187 +1,165 @@
 **Appendix V: Automating Collaborative Development with CI/CD**
 
-Appendices III and IV established the foundations for creating a shareable Python package (`stellarphyslib`) and managing its development collaboratively using Git and GitHub. However, manually running tests, building distribution files, publishing releases to PyPI, and updating documentation for every change or release quickly becomes burdensome and prone to human error, especially with multiple contributors. This appendix delves into automating this entire process using **Continuous Integration (CI)** and **Continuous Deployment/Delivery (CD)** practices. We will demonstrate how to set up a complete CI/CD pipeline specifically for our `stellarphyslib` example using **GitHub Actions**, the CI/CD platform integrated into GitHub. This pipeline will automatically lint the code, run tests across multiple Python versions, build the package, publish it to PyPI upon creating a release tag, and trigger documentation updates on Read the Docs, thereby streamlining the collaborative workflow, ensuring code quality, and simplifying the release process significantly.
+Appendices III and IV established the foundations for creating a shareable Python package (`stellarphyslib`) and managing its development collaboratively using Git and GitHub. However, manually performing crucial quality checks (testing, linting) and release procedures (building, uploading to PyPI, updating documentation) for every change or new version is inefficient, error-prone, and becomes a significant bottleneck in collaborative environments. This appendix delves into automating these processes using standard **Continuous Integration (CI)** and **Continuous Delivery/Deployment (CD)** practices. We will demonstrate how to construct a comprehensive, automated pipeline specifically for our `stellarphyslib` example using **GitHub Actions**, the powerful CI/CD platform integrated directly into GitHub. This pipeline will automatically lint the code for style consistency, run the `pytest` test suite across multiple Python versions and operating systems to ensure correctness and compatibility, build the distributable package files (`sdist` and `wheel`), automatically publish new releases to the Python Package Index (PyPI) upon the creation of a version tag in Git, and integrate with Read the Docs to trigger automated documentation updates. Implementing such a CI/CD pipeline dramatically streamlines the collaborative workflow, enforces quality standards, reduces manual burdens, and enables faster, more reliable software releases for the scientific community.
 
-**A.V.1 Introduction to CI/CD**
+**A.V.1 Introduction to CI/CD Concepts**
 
-**Continuous Integration (CI)** and **Continuous Deployment/Delivery (CD)** are cornerstone practices in modern software development designed to automate the building, testing, and releasing of software, leading to faster feedback cycles, improved code quality, and more reliable releases. While originating in traditional software engineering, these practices are increasingly vital for developing robust and maintainable scientific software, including Python packages used in astrophysics.
+In the realm of software development, including scientific software, **Continuous Integration (CI)** and **Continuous Deployment/Delivery (CD)** represent a set of practices and automations designed to improve code quality, accelerate development cycles, and make the process of releasing software more reliable and less manual. These concepts are particularly vital in collaborative projects where multiple contributors are making changes concurrently.
 
-**Continuous Integration (CI)** is the practice where developers frequently merge their code changes (typically from feature branches via Pull Requests, see Appendix IV) into a central repository (e.g., the `main` branch). Each merge automatically triggers an automated **build** and **test** sequence. The primary goals of CI are:
-1.  To detect integration errors (conflicts between different developers' changes) as early as possible.
-2.  To automatically run comprehensive test suites (unit tests, integration tests) to catch bugs and regressions immediately after changes are introduced.
-3.  To enforce code quality standards (e.g., style checks, linting).
-4.  To provide rapid feedback to developers on the health of the codebase.
-A successful CI run indicates that the latest changes integrate well and haven't broken existing functionality, increasing confidence in the codebase's stability.
+**Continuous Integration (CI)** focuses on automating the process of integrating code changes from individual developers into a shared repository and verifying those changes automatically. The core idea is that developers frequently merge their work (e.g., daily or multiple times a day, usually via feature branches and Pull Requests) into a main development line (like the `main` or `develop` branch). Each time code is pushed or a Pull Request is opened/updated, an automated system triggers a predefined workflow. This workflow typically involves: checking out the code, compiling it (if necessary), running automated tests (unit tests, integration tests), performing static analysis (linting for style errors or potential bugs), and reporting the results back to the developers immediately. The primary benefit is catching integration errors, bugs, and regressions *early* in the development cycle when they are easiest and least costly to fix. CI fosters a culture of frequent testing and ensures the main codebase remains in a stable, functional state.
 
-**Continuous Delivery (CD)** extends CI by automating the **release process**. After the CI pipeline successfully builds and tests the code, CD practices ensure that the software *can* be released reliably at any time. This often involves automatically building the final distributable artifacts (like Python wheels and source distributions) and potentially deploying them to a staging environment for further testing or user acceptance.
+**Continuous Delivery**, often used interchangeably with CD, extends CI by automating the preparation of the software for release. After the CI pipeline successfully builds and tests the code, the CD pipeline automatically creates the final distributable artifacts (e.g., compiled binaries, Python wheels, source distributions, container images) and potentially deploys them to a staging or testing environment. This ensures that, at any point, the latest version that has passed all automated checks is ready to be released to users with minimal manual intervention. The actual release to production (or publishing to PyPI for a library) might still involve a manual approval step.
 
-**Continuous Deployment (CD)** goes one step further than Continuous Delivery by automatically **deploying** every change that passes the CI pipeline directly to the production environment (or, in our case for a library, publishing it to PyPI). This enables very rapid release cycles but requires a high degree of confidence in the automated testing and release process. For scientific libraries, Continuous Delivery (automating the build of release artifacts) followed by a manual or tag-triggered deployment (publishing to PyPI) is often a more common and prudent approach than fully automated deployment on every merge to `main`.
+**Continuous Deployment**, the second meaning of CD, takes Continuous Delivery one step further by automating the final deployment step as well. Every change that successfully passes the entire CI/CD pipeline (build, test, potentially staging checks) is automatically deployed to the production environment or published to the package repository (like PyPI). This enables extremely rapid release cycles, where users can receive new features and bug fixes almost immediately after they are developed and verified. However, it requires a very high degree of confidence in the automated testing suite and potentially sophisticated deployment strategies (like canary releases or feature flags) to mitigate the risk of deploying faulty code.
 
-Implementing CI/CD for a Python package like `stellarphyslib` involves setting up automated workflows that trigger on specific Git events (like pushes or Pull Requests). These workflows typically run on a **CI/CD platform** (like GitHub Actions, GitLab CI/CD, Jenkins). The platform provisions a clean environment, checks out the code, installs dependencies, runs linters, executes tests (`pytest`), builds the package (`build`), and potentially uploads the built package to PyPI (`twine`) or triggers documentation builds (Read the Docs).
+For scientific libraries like `stellarphyslib`, a common and robust approach is to implement **CI** (automated testing and linting on every push/PR) and **Continuous Delivery** (automated building of release artifacts). The final step of publishing to PyPI (**Continuous Deployment** aspect) is often triggered *manually* or semi-automatically based on a specific event, such as creating and pushing a version tag (e.g., `v0.2.0`) in the Git repository. This provides a balance between automation efficiency and human oversight for the critical release step.
 
-The benefits of adopting CI/CD for astrophysical software development are numerous. It enforces testing and coding standards, catches errors much earlier in the development cycle, reduces the manual effort involved in testing and releasing, speeds up the integration of contributions from multiple collaborators, and ultimately leads to more reliable, higher-quality, and more frequently updated software tools for the scientific community. Setting up CI/CD represents an investment in automation that pays significant dividends in maintainability and collaboration efficiency.
+The benefits of establishing a CI/CD pipeline are substantial. It significantly reduces the manual workload associated with testing and releasing software. It enforces code quality and consistency across all contributions. It accelerates the feedback loop for developers, allowing them to fix errors quickly. It improves the overall reliability and stability of the software by ensuring every change is automatically validated. For collaborative projects, it provides a crucial framework for integrating contributions smoothly and maintaining a shared standard of quality. Implementing CI/CD requires an initial setup effort but pays off immensely in terms of development velocity, code maintainability, and collaborator productivity in the long run. Platforms like GitHub Actions make setting up sophisticated CI/CD pipelines increasingly accessible.
 
-**A.V.2 Tools for CI/CD**
+**A.V.2 Tools for CI/CD Pipelines**
 
-Setting up a CI/CD pipeline involves orchestrating several different tools that work together, typically triggered and managed by a central CI/CD platform integrated with the version control system. For developing and distributing our `stellarphyslib` Python package hosted on GitHub, the key tools are:
+Automating the CI/CD process involves integrating and orchestrating several distinct tools, each responsible for a specific part of the build, test, and deployment pipeline. These tools are typically invoked by a central CI/CD platform based on configuration files stored within the project's version control repository. For building a CI/CD pipeline for our Python package `stellarphyslib` hosted on GitHub, the ecosystem of relevant tools includes:
 
-1.  **Git:** The distributed version control system (Sec A.III.5) used to track code changes locally and coordinate contributions. CI/CD workflows are typically triggered by Git events like `push` or `pull_request`.
-2.  **GitHub:** The web platform (Sec A.IV.2) hosting the remote Git repository. It provides the central location for code, collaboration features (Issues, Pull Requests), and crucially, the integrated CI/CD platform **GitHub Actions**.
-3.  **GitHub Actions:** The CI/CD platform built into GitHub (Sec A.IV.4). Workflows are defined using YAML files stored in the `.github/workflows/` directory of the repository. GitHub provides virtual machine runners (Linux, macOS, Windows) where workflow steps are executed automatically upon specified triggers. It integrates seamlessly with Pull Requests, showing check statuses directly.
-4.  **Python & `pip`:** The core language and package installer used to set up the environment, install dependencies, and run tools within the CI workflow.
-5.  **`build`:** The standard Python package (`pip install build`) used for building source distributions (sdists) and wheels from the codebase based on the `pyproject.toml` configuration (Sec A.III.7). Usually run via `python -m build`.
-6.  **`twine`:** The standard tool (`pip install twine`) for securely uploading Python package distributions (built by `build`) to PyPI or TestPyPI (Sec A.III.8). Used in the deployment stage of the CD pipeline, typically triggered upon creating a release tag.
-7.  **`pytest`:** The testing framework (Sec A.III.4) used to write and run automated unit tests for the package. The CI workflow executes `pytest` to ensure code correctness. Extensions like `pytest-cov` can measure test coverage.
-8.  **Linters/Formatters (e.g., `flake8`, `ruff`, `black`):** Code quality tools run during CI to check for style guide violations (PEP 8), common programming errors (linting with `flake8` or the faster `ruff`), or to enforce consistent code formatting (`black`).
-9.  **Sphinx:** The documentation generator (Sec A.IV.6) used to build HTML documentation from `.rst` source files and Python docstrings. The CI workflow might include a step to build the documentation to catch errors.
-10. **Read the Docs:** The documentation hosting service (Sec A.IV.6) that integrates with GitHub. While not directly part of the GitHub Actions workflow file itself, it's configured (via its website or a `.readthedocs.yaml` file) to automatically trigger documentation builds when changes are pushed to specific branches or tags in the GitHub repository, effectively acting as a separate CD pipeline for documentation.
-11. **Virtual Environments (`venv` or `conda`):** While not explicitly a tool *in* the CI pipeline, the concept of using isolated environments is fundamental. CI services typically operate in clean, ephemeral environments for each run, ensuring consistent dependency installation based on `pyproject.toml` or requirements files.
+1.  **Version Control System (Git):** Underpins the entire process. CI/CD workflows are triggered by Git events (`push`, `pull_request`, `tag`). Git branches manage parallel development, and Pull Requests initiate the integration and review process where CI checks are crucial.
+2.  **Hosting Platform (GitHub):** Provides the central remote repository, collaboration features (Issues, Pull Requests with integrated status checks), and the built-in CI/CD platform (**GitHub Actions**).
+3.  **CI/CD Platform (GitHub Actions):** Executes the automated workflows defined in YAML files (`.github/workflows/`). It provides runners (virtual machines) with different operating systems, manages secrets securely, and reports status back to GitHub commits and Pull Requests.
+4.  **Python Environment Management:** The CI workflow needs to set up specific Python versions (often testing against multiple versions) and install dependencies in a clean environment. Actions like `actions/setup-python` are used. Package managers like `pip` are used for installation. Using virtual environments is implicit in the clean runner environment.
+5.  **Build Tools (`build`):** The `build` package (`pip install build`) is the standard command-line tool for invoking the build backend (usually `setuptools`) specified in `pyproject.toml` to create the source distribution (`sdist`) and wheel (`bdist_wheel`) files. Used in the build and release stages.
+6.  **Testing Framework (`pytest`):** The `pytest` framework (`pip install pytest`) is used to discover and run the automated tests (unit tests, integration tests) located typically in the `tests/` directory. Test results determine the success or failure of a critical CI step. `pytest-cov` is often added to measure test coverage.
+7.  **Code Quality Tools (Linters/Formatters):** Tools like `flake8` or `ruff` (`pip install flake8 ruff`) perform static analysis to detect potential errors, style violations (PEP 8), and code complexity issues. Formatters like `black` (`pip install black`) can be run in check mode (`black --check .`) to enforce consistent code style. These are typically run early in the CI pipeline.
+8.  **Deployment Tool (`twine`):** The `twine` package (`pip install twine`) is the standard secure tool for uploading the built distribution files (wheels, sdists) from the `dist/` directory to PyPI or TestPyPI. Used in the final deployment stage of the release workflow, usually triggered by a tag push. Requires PyPI API tokens managed as secrets.
+9.  **Documentation Generator (Sphinx):** Although often deployed separately via Read the Docs, the CI pipeline might optionally include a step to *build* the documentation using Sphinx (`pip install sphinx` plus theme/extensions) to catch build errors early (e.g., issues with `autodoc` reading docstrings or `.rst` formatting errors).
+10. **Documentation Hosting (Read the Docs):** While external to the GitHub Actions workflow file, Read the Docs ([readthedocs.org](https://readthedocs.org)) integrates via webhooks to provide the automated building and hosting part of the documentation CD pipeline, triggered by pushes or tags to the GitHub repository. Configuration is typically via a `.readthedocs.yaml` file in the repo.
 
-The CI/CD workflow defined, for example in a GitHub Actions YAML file, orchestrates these tools. It specifies the sequence of steps: checkout code, set up Python, install tools and dependencies using `pip`, run `flake8`, run `pytest`, potentially build docs with `sphinx`, build distributions with `build`, and conditionally (e.g., on tag push) upload distributions with `twine`. Read the Docs configuration handles the separate documentation deployment pipeline. Together, these tools automate the entire process from code commit to tested release and updated documentation.
+A well-designed CI/CD pipeline effectively chains these tools together. GitHub Actions defines the trigger events and the sequence of steps. Each step invokes one or more of these tools (installed within the runner environment) to perform specific tasks like checking out code, setting up Python, installing dependencies, linting, testing, building, and potentially deploying. The success or failure of each step determines the overall outcome reported back to the developer or maintainer, providing automated quality control and streamlining the path from code commit to validated release.
 
 **A.V.3 Setting up Continuous Integration (GitHub Actions)**
 
-Continuous Integration (CI) aims to automatically build and test code whenever changes are pushed or proposed via Pull Requests. We can set up a robust CI pipeline for our `stellarphyslib` package using GitHub Actions by creating a YAML workflow file in the `.github/workflows/` directory of our repository. Let's call it `ci.yml`.
+Let's detail the setup of the Continuous Integration (CI) pipeline for our `stellarphyslib` package using GitHub Actions. The goal is to automatically check every push and Pull Request against the main branches (`main`, `develop`) for code style, correctness via testing, and compatibility across different environments. We achieve this by creating a workflow file, typically `.github/workflows/ci.yml`.
 
-This workflow should perform the essential checks: linting, testing across multiple Python versions, and potentially ensuring the package builds correctly.
+**1. Workflow File Creation:** In the root directory of your Git repository, create a hidden directory named `.github`. Inside this, create another directory named `workflows`. Finally, create a YAML file within `workflows`, for example, `ci.yml`. YAML (YAML Ain't Markup Language) is a human-readable data serialization format used for configuration files.
 
+**2. Defining Triggers:** At the top of `ci.yml`, specify when the workflow should run using the `on:` keyword. Common triggers include:
+   *   `push`: Runs whenever code is pushed to specified branches.
+   *   `pull_request`: Runs whenever a Pull Request is opened, synchronized, or reopened targeting specified branches.
+   *   `workflow_dispatch`: Allows manual triggering from the GitHub Actions UI.
+   *   `schedule`: Runs on a scheduled basis (e.g., nightly).
+For CI, triggering on pushes to main development branches and on Pull Requests targeting them is standard practice:
 ```yaml
-# --- File: .github/workflows/ci.yml ---
-
 name: StellarPhysLib CI
 
-# Triggers: Run on pushes to main/develop, and on any Pull Request
 on:
   push:
-    branches: [ main, develop ] # Adjust branch names as needed
+    branches: [ main, develop ] # Or just main if using GitHub Flow
   pull_request:
-    branches: [ main, develop ]
-
-jobs:
-  test: # Job ID
-    runs-on: ${{ matrix.os }} # Run on specified OS (e.g., ubuntu-latest)
-    strategy:
-      fail-fast: false # Allow other matrix jobs to continue if one fails
-      matrix:
-        # Test against multiple supported Python versions
-        python-version: ["3.8", "3.9", "3.10", "3.11"] 
-        os: [ubuntu-latest, macos-latest, windows-latest] # Test on different OS
-
-    steps:
-    #----------------------------------------------
-    # Checkout Code
-    #----------------------------------------------
-    - name: Checkout repository
-      uses: actions/checkout@v4 
-
-    #----------------------------------------------
-    # Set up Python ${{ matrix.python-version }}
-    #----------------------------------------------
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip' # Enable caching for pip dependencies
-
-    #----------------------------------------------
-    # Install Dependencies
-    #----------------------------------------------
-    - name: Install build/test tools and package dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build pytest pytest-cov flake8 # Basic tools
-        # Install the package itself along with its 'test' optional dependencies
-        # Assumes [test] includes pytest and any other test-specific needs
-        # defined in pyproject.toml -> [project.optional-dependencies]
-        pip install .[test] 
-
-    #----------------------------------------------
-    # Linting Check (Example using flake8)
-    #----------------------------------------------
-    - name: Lint with flake8
-      run: |
-        # Optionally configure flake8 via setup.cfg or pyproject.toml
-        # Fail the workflow if linting errors are found
-        flake8 stellarphyslib/ tests/ --count --show-source --statistics
-
-    #----------------------------------------------
-    # Run Tests with pytest
-    #----------------------------------------------
-    - name: Test with pytest and coverage
-      run: |
-        # Generate coverage report
-        pytest tests/ --cov=stellarphyslib --cov-report=xml 
-    
-    #----------------------------------------------
-    # Optional: Upload Coverage Report
-    #----------------------------------------------
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }} # If using Codecov.io (optional)
-        files: ./coverage.xml
-        fail_ci_if_error: false # Don't fail CI if upload fails
-
-    #----------------------------------------------
-    # Optional: Build Check (ensure sdist/wheel build)
-    #----------------------------------------------
-    - name: Check package build
-      run: python -m build --sdist --wheel --outdir dist/
-
+    branches: [ main, develop ] # Or just main
 ```
 
-**Explanation of the `ci.yml` file:**
-*   `name`: Name of the workflow displayed on GitHub.
-*   `on`: Defines triggers. Here, it runs on pushes to `main` or `develop` branches, and on any Pull Request targeting these branches.
-*   `jobs`: Defines one or more jobs to run. Here, a single `test` job.
-*   `runs-on`: Specifies the type of virtual machine runner (e.g., latest Ubuntu). Using a matrix allows testing on multiple OS (`ubuntu-latest`, `macos-latest`, `windows-latest`).
-*   `strategy/matrix`: Defines combinations of variables to run the job with. Here, it runs the job for each specified `python-version` and `os`. `fail-fast: false` ensures all combinations run even if one fails.
-*   `steps`: A sequence of tasks executed within the job.
-    *   `actions/checkout@v4`: Standard action to check out the repository code into the runner environment.
-    *   `actions/setup-python@v5`: Standard action to set up the specified Python version from the matrix. Includes pip caching.
-    *   `Install Dependencies`: Uses `pip` to install necessary tools (`build`, `pytest`, `flake8`) and then installs the package itself (`.`) along with its testing dependencies (`[test]`, which should be defined in the `[project.optional-dependencies]` section of `pyproject.toml`).
-    *   `Lint with flake8`: Runs `flake8` on the package source directory (`stellarphyslib/`) and the `tests/` directory to check for style issues and basic errors. The command shown will cause the CI step to fail if any errors are found.
-    *   `Test with pytest`: Runs the test suite using `pytest tests/`. Includes `--cov` flags to generate a code coverage report (`coverage.xml`).
-    *   `Upload coverage to Codecov`: (Optional) Uses a third-party action to upload the coverage report to a service like Codecov.io for tracking test coverage over time (requires setting up a `CODECOV_TOKEN` as a GitHub Secret). `fail_ci_if_error: false` prevents CI failure if just the upload step has issues.
-    *   `Check package build`: (Optional) Runs `python -m build` to ensure the source distribution and wheel can be created without errors.
+**3. Defining Jobs and Strategy:** Workflows consist of one or more `jobs`. We'll define a `test` job. Using `strategy` and `matrix`, we can configure the job to run multiple times with different configurations, ensuring broader compatibility. We'll test on the latest Ubuntu, macOS, and Windows runners and across a range of supported Python versions:
+```yaml
+jobs:
+  test:
+    name: Test on Py-${{ matrix.python-version }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false # Let all jobs in matrix finish
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11"] 
+```
 
-When this file is present in `.github/workflows/`, GitHub automatically detects it. When a Pull Request is opened or updated, this CI workflow will run for each specified Python version and OS. The status (passing checks or failing tests/linting) will be reported directly on the Pull Request page, providing immediate feedback to contributors and reviewers, ensuring that code merged into the main branches meets quality standards.
+**4. Defining Steps within the Job:** Each job has a sequence of `steps`.
+   *   **Checkout Code:** The first step is always to get the code using the standard `actions/checkout@v4` action.
+     ```yaml
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v4
+     ```
+   *   **Setup Python:** Use the `actions/setup-python@v5` action to install the specific Python version from the matrix. Enabling pip caching speeds up subsequent dependency installations.
+     ```yaml
+       - name: Set up Python ${{ matrix.python-version }}
+         uses: actions/setup-python@v5
+         with:
+           python-version: ${{ matrix.python-version }}
+           cache: 'pip'
+     ```
+   *   **Install Dependencies:** Install necessary tools (like `build`, `pytest`, linters) and the package itself with its dependencies, including optional test dependencies. Assuming test dependencies are listed under `[project.optional-dependencies.test]` in `pyproject.toml`:
+     ```yaml
+       - name: Install dependencies
+         run: |
+           python -m pip install --upgrade pip
+           pip install build pytest pytest-cov flake8 ruff # Example tools
+           pip install .[test] # Installs package from source + test extras
+     ```
+   *   **Linting:** Run code style checks. `ruff` is a modern, fast alternative/complement to `flake8` and other tools. Failing this step causes the CI check to fail.
+     ```yaml
+       - name: Lint with Ruff (or flake8)
+         run: |
+           # Using Ruff (example) - configure via pyproject.toml [tool.ruff]
+           pip install ruff 
+           ruff check . --output-format=github --force-exit 
+           ruff format . --check --force-exit # Optional: Check formatting
+     ```
+   *   **Testing:** Run the test suite using `pytest`. Include coverage reporting. Failure here indicates bugs or regressions.
+     ```yaml
+       - name: Test with pytest and coverage
+         run: |
+           pytest tests/ --cov=stellarphyslib --cov-report=xml --cov-report=term
+     ```
+   *   **(Optional) Upload Coverage:** Upload the generated `coverage.xml` report to a service like Codecov.io for tracking coverage trends. Requires setting up the service and adding a `CODECOV_TOKEN` as a GitHub repository secret.
+     ```yaml
+       - name: Upload coverage reports to Codecov
+         uses: codecov/codecov-action@v4 # Use latest version
+         env:
+           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }} # Token from GitHub secrets
+         with:
+           fail_ci_if_error: false # Optional: prevent CI failure if upload fails
+           files: ./coverage.xml
+     ```
+   *   **(Optional) Build Check:** Ensure the package builds correctly into `sdist` and `wheel` formats.
+     ```yaml
+       - name: Check package build
+         run: python -m build --sdist --wheel --outdir dist/
+     ```
+
+**5. Committing the Workflow File:** Save the complete YAML content to `.github/workflows/ci.yml`, add it to Git (`git add .github/`), commit (`git commit -m "Add GitHub Actions CI workflow"`), and push to GitHub.
+
+Once pushed, GitHub Actions will automatically detect this file and start running the workflow according to the specified triggers (`on: push/pull_request`). The status of the checks (passing green check or failing red cross) will appear next to commits and on Pull Request pages, providing immediate feedback and forming a crucial part of the collaborative development quality control process. Fine-tuning the specific linters, test commands, Python versions, and OS matrix depends on the project's specific needs and target audience.
 
 **A.IV.4 Automating Releases to PyPI (`twine` and GitHub Actions)**
 
-Continuous Integration (Sec A.IV.3) ensures code quality on every commit/PR, but Continuous Delivery/Deployment (CD) involves automating the **release process** itself. For a Python library like `stellarphyslib`, the primary "deployment" is publishing a new version to the Python Package Index (PyPI) so users can install it via `pip`. We can automate this using GitHub Actions, triggering the upload only when a specific event occurs, typically the creation of a **Git tag** that marks a release version.
+Continuous Delivery involves automating the preparation and potential release of software after successful CI checks. For our Python package `stellarphyslib`, the goal is typically to automatically publish new versions to the Python Package Index (PyPI) when a release is ready, triggered by creating a version tag in Git. This process can be fully automated using GitHub Actions, leveraging the `build` and `twine` tools, along with secure credential management via GitHub Secrets.
 
-The standard practice is:
-1.  When ready for a release (e.g., after merging several features into `main`), decide on the new version number (e.g., `v0.2.0`) following Semantic Versioning.
-2.  Update the `version` string in `pyproject.toml` to the new version.
-3.  Update the `CHANGELOG.md` file detailing changes since the last release.
-4.  Commit these changes: `git add pyproject.toml CHANGELOG.md`, `git commit -m "Bump version to 0.2.0"`.
-5.  Create an **annotated Git tag**: `git tag -a v0.2.0 -m "Release version 0.2.0"`. The `v` prefix is common convention.
-6.  Push the commit *and* the tag to GitHub: `git push origin main --tags`.
+**1. Release Trigger (Git Tags):** The standard convention is to trigger PyPI releases based on pushing **annotated Git tags** that match a specific version pattern (e.g., `v*.*.*` for versions like `v0.1.0`, `v1.0.0`, etc.). The manual steps performed by the maintainer before triggering the release are:
+    *   Ensure the code on the `main` branch is stable and ready for release.
+    *   Update the `version = "X.Y.Z"` string in the `pyproject.toml` file.
+    *   Update the `CHANGELOG.md` or release notes.
+    *   Commit these version and changelog updates: `git add pyproject.toml CHANGELOG.md; git commit -m "Bump version to X.Y.Z"`.
+    *   Create an annotated tag: `git tag -a vX.Y.Z -m "Release version X.Y.Z"`.
+    *   Push the commit and the tag to GitHub: `git push origin main --tags`.
+This push of the tag will be the event that triggers our automated deployment workflow.
 
-We then configure a GitHub Actions workflow (or add a job to the existing CI workflow) that **triggers specifically on the push of tags matching a version pattern** (e.g., `v*.*.*`). This job will build the package and upload it to PyPI using `twine`.
+**2. Secure PyPI Credentials (GitHub Secrets):** As outlined in Sec A.III.8, uploading to PyPI requires authentication. Store your PyPI API token (and ideally a separate TestPyPI token) as **encrypted secrets** in your GitHub repository's settings ("Settings" -> "Secrets and variables" -> "Actions"). Create secrets named, for example, `PYPI_API_TOKEN` and `TEST_PYPI_API_TOKEN`. These secrets can be securely accessed within the GitHub Actions workflow without exposing them in the code.
 
-**Handling PyPI Credentials Securely:** Uploading to PyPI requires authentication. Hardcoding your PyPI username and password (or API token) directly in the workflow file is a major security risk. GitHub Actions provides **Secrets** for securely storing sensitive information like API tokens.
-1.  Generate API tokens on both PyPI ([https://pypi.org/manage/account/](https://pypi.org/manage/account/)) and TestPyPI ([https://test.pypi.org/manage/account/](https://test.pypi.org/manage/account/)). Scope the tokens appropriately (e.g., only to the specific project if possible). Copy the generated tokens immediately.
-2.  In your GitHub repository settings, go to "Secrets and variables" -> "Actions".
-3.  Create two new **repository secrets**:
-    *   `PYPI_API_TOKEN`: Paste your main PyPI API token value here.
-    *   `TEST_PYPI_API_TOKEN`: Paste your TestPyPI API token value here.
-These secrets can then be accessed securely within the GitHub Actions workflow YAML file using the syntax `${{ secrets.SECRET_NAME }}`.
-
-Now, we can add a deployment job to our workflow file (or create a separate `release.yml` workflow):
+**3. GitHub Actions Workflow for Deployment:** We can define a separate workflow file (e.g., `.github/workflows/release.yml`) or add a new job to our existing `ci.yml` specifically for deployment. This job should only run when a version tag is pushed.
 
 ```yaml
-# --- Add this job to .github/workflows/ci.yml (or create release.yml) ---
+# --- File: .github/workflows/release.yml (or add as 'deploy' job in ci.yml) ---
+
+name: Publish Python Package to PyPI
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*' # Trigger only on tags like vX.Y.Z or vX.Y.Zalpha etc.
 
 jobs:
-  # ... (existing 'test' job from Sec A.IV.3) ...
-
   deploy:
-    # Only run this job when a tag matching 'v*' is pushed
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    needs: test # Only run if the 'test' job succeeded across all matrix runs? Check syntax. Often run independently.
+    name: Build and publish to PyPI
     runs-on: ubuntu-latest
+    # Grant permission to write package to PyPI using OIDC token (preferred modern method)
+    permissions:
+      id-token: write 
 
     steps:
     - name: Checkout repository
@@ -190,118 +168,178 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x' # Use a specific recent Python version
+        python-version: '3.x' # Use a fixed recent Python for building/publishing
 
-    - name: Install dependencies (build, twine)
-      run: |
-        python -m pip install --upgrade pip
-        pip install build twine
+    - name: Install build dependencies
+      run: python -m pip install --upgrade pip build twine
 
-    - name: Build sdist and wheel
+    - name: Build package (sdist and wheel)
       run: python -m build --sdist --wheel --outdir dist/
 
-    - name: Publish package to TestPyPI (Optional but Recommended)
-      # Can be a separate job triggered differently, or manually triggered workflow
-      # if: github.event_name == 'workflow_dispatch' # Example manual trigger
-      run: |
-        echo "Uploading to TestPyPI..."
-        twine upload --repository testpypi dist/* --skip-existing
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }} # Use TestPyPI token
+    # --- Optional: Upload to TestPyPI first ---
+    # This step might be manually triggered or run on specific branches in a separate workflow
+    # - name: Publish package to TestPyPI
+    #   run: twine upload --repository testpypi dist/* --skip-existing
+    #   env:
+    #     TWINE_USERNAME: __token__
+    #     TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }} 
 
-    - name: Publish package to PyPI
-      # This step runs because of the job's top 'if' condition (on tag push)
-      run: |
-        echo "Uploading to PyPI..."
-        twine upload dist/* --skip-existing
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }} # Use main PyPI token from secrets
-```
+    # --- Publish to PyPI (Triggered by tag push) ---
+    - name: Publish package distributions to PyPI
+      # Use PyPI's trusted publisher feature with OIDC (Recommended, avoids storing tokens long-term)
+      uses: pypa/gh-action-pypi-publish@release/v1
+      # This action handles interacting with PyPI securely using short-lived OIDC tokens.
+      # Requires setting up trusted publishing on PyPI for this repository/workflow.
+      # If NOT using OIDC, use twine directly with API token secret:
+      # run: twine upload dist/* --skip-existing
+      # env:
+      #   TWINE_USERNAME: __token__
+      #   TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
-**Explanation of the `deploy` job:**
-*   `if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')`: This crucial condition ensures the job *only* runs when a push event occurs that involves a Git reference starting with `refs/tags/v` (i.e., pushing a tag like `v0.2.0`). It will *not* run on regular pushes to branches or Pull Requests.
-*   `needs: test` (Optional): Could make this job depend on the successful completion of the `test` job (ensure syntax for depending on matrix job completion is correct if used). Often, release workflows are kept separate.
-*   Steps 1-4: Standard checkout, Python setup, build tool installation, and package building using `python -m build`.
-*   Step 5 (Publish to TestPyPI - Optional): Demonstrates uploading to TestPyPI first. This step might be better placed in a separate workflow triggered manually (`workflow_dispatch`) or on pushes to a specific branch (`release/*`) before tagging. It uses the `TEST_PYPI_API_TOKEN` secret. Note `TWINE_USERNAME` is set to `__token__` when using API tokens. `--skip-existing` prevents errors if that version was already uploaded.
-*   Step 6 (Publish to PyPI): This step *will* run on a tag push due to the job's `if` condition. It uses `twine upload` (defaulting to main PyPI) and securely accesses the main `PYPI_API_TOKEN` from GitHub Secrets via `${{ secrets.PYPI_API_TOKEN }}`.
-
-This setup automates the release process. When a maintainer decides to release version `vX.Y.Z`, they update `pyproject.toml`, commit, create the tag `vX.Y.Z`, and push the tag (`git push --tags`). GitHub Actions detects the tag push, triggers the `deploy` job, builds the package, and uploads it automatically and securely to PyPI using the stored API token secret. This significantly reduces the manual effort and potential for errors in the release process, ensuring that tagged releases are consistently published.
-
-**A.IV.5 Automating Documentation Deployment (ReadTheDocs)**
-
-Consistent, up-to-date documentation is vital for any shared scientific package. While Sphinx (Sec A.IV.6) generates documentation from source files and docstrings, keeping the hosted online documentation synchronized with code changes (especially for the development version) and tagged releases requires automation. **Read the Docs** ([readthedocs.org](https://readthedocs.org)) is the standard platform for achieving this, providing free hosting and automated builds tightly integrated with GitHub (and other Git hosting services).
-
-The workflow relies on configuring Read the Docs (RTD) to monitor your GitHub repository and automatically trigger documentation builds when specific events occur (like pushes to certain branches or creation of tags).
-
-**Initial Setup:**
-1.  **Sphinx Setup:** Ensure your project has a working Sphinx documentation setup (typically in a `docs/` subdirectory with `conf.py` and source `.rst` or `.md` files) as described in Appendix A.III.7 and conceptually in A.IV.6. Make sure Sphinx can successfully build the HTML documentation locally (`cd docs; make html`). Ensure `autodoc` is configured if you want to pull from docstrings.
-2.  **Read the Docs Account:** Create an account on [readthedocs.org](https://readthedocs.org).
-3.  **Import Project:** Connect your Read the Docs account to your GitHub account. Use the Read the Docs dashboard to "Import a Project," selecting your `stellarphyslib_project` repository from GitHub.
-
-**Configuration (`.readthedocs.yaml`):** While some configuration can be done via the RTD web interface, the recommended modern approach is to add a configuration file named `.readthedocs.yaml` to the **root directory** of your Git repository. This file tells Read the Docs exactly how to build your documentation, ensuring consistency and reproducibility. A typical configuration might look like:
-
-```yaml
-# File: .readthedocs.yaml
-
-# Required
-version: 2
-
-# Set the version of Python and other tools you want prerequisites
-build:
-  os: ubuntu-22.04
-  tools:
-    python: "3.10" # Specify desired Python version for build
-
-# Build documentation in the docs/ directory with Sphinx
-sphinx:
-  configuration: docs/source/conf.py # Path to Sphinx conf.py
-
-# Optionally build PDF or ePub formats
-# formats:
-#   - pdf
-
-# Requirements: Specify dependencies needed to *build* the docs
-# Option 1: Use a requirements file
-# python:
-#   install:
-#     - requirements: docs/requirements.txt 
-# Option 2: Install package + extras (if defined in pyproject.toml)
-python:
-  install:
-    - method: pip
-      path: . # Install the package itself from the root directory
-      extra_requirements:
-        - docs # Install optional dependencies listed under [project.optional-dependencies.docs]
-               # This should include sphinx, theme, needed extensions (napoleon, myst-parser), etc.
 ```
 
 **Explanation:**
-*   `version: 2`: Specifies the configuration file format version.
-*   `build`: Defines the build environment.
-    *   `os`: Operating system image (e.g., Ubuntu).
-    *   `tools/python`: Python version to use.
-*   `sphinx`: Specifies Sphinx configuration details.
-    *   `configuration`: Path to the `conf.py` file.
-*   `python/install`: Specifies how to install dependencies.
-    *   The recommended method shown here uses `pip` to install the package itself (`path: .`) along with optional dependencies defined under the `[docs]` extra in your `pyproject.toml` file. This ensures Sphinx can import your package to use `autodoc`. The `[docs]` extra should list `sphinx`, `sphinx-rtd-theme`, `napoleon`, etc.
-    *   Alternatively (commented out), you could maintain a separate `docs/requirements.txt` file listing Sphinx and all necessary dependencies.
+*   `on: push: tags: - 'v[0-9]+.[0-9]+.[0-9]+*'`: This trigger ensures the workflow *only* runs when a Git tag matching the version pattern (e.g., `v0.1.0`, `v1.2.3rc1`) is pushed to GitHub.
+*   `permissions: id-token: write`: (Recommended Method) Grants the workflow permission to request an OpenID Connect (OIDC) token from GitHub. This token can be presented to PyPI (after configuring trusted publishing on PyPI's side) for passwordless, secure authentication without needing long-lived API token secrets stored in GitHub.
+*   Steps 1-4: Standard checkout, Python setup, installing `build` and `twine`, and building the `sdist` and `wheel` packages into the `dist/` directory.
+*   (Optional TestPyPI Upload): Shows conceptually where an upload to TestPyPI would go, using the `TEST_PYPI_API_TOKEN` secret. This is often better done manually or in a separate workflow before tagging the release.
+*   Step 5 (Publish to PyPI):
+    *   **Recommended Method (OIDC):** Uses the official `pypa/gh-action-pypi-publish` action. This action securely handles authentication with PyPI using short-lived OIDC tokens obtained via the `id-token: write` permission. This avoids storing static API tokens in GitHub secrets and is the modern best practice. *Requires setting up "Trusted Publishing" in your PyPI project settings to trust GitHub Actions from your repository.*
+    *   **Alternative Method (API Token):** The commented-out `run: twine upload ...` block shows the older method using `twine` directly with the `PYPI_API_TOKEN` stored as a GitHub secret. This still works but is considered less secure than OIDC. Ensure `TWINE_USERNAME` is `__token__`.
 
-Commit this `.readthedocs.yaml` file to your repository root.
+**Workflow:** When a maintainer pushes a tag `vX.Y.Z`, this workflow automatically triggers. It builds the package distributions and then uses the `pypa/gh-action-pypi-publish` action (or `twine` with the secret token) to upload these files to PyPI, making version `X.Y.Z` available for `pip install`.
 
-**Automation Trigger:** Once your project is imported and configured on Read the Docs (either via the web UI or the `.yaml` file), it automatically sets up **webhooks** with your GitHub repository. By default:
-*   **Pushes to your default branch** (usually `main`) trigger a build for the `'latest'` version of your documentation.
-*   **Creation of new Git tags** (especially those matching version patterns like `v*.*.*`) triggers a build for that specific tag, which often becomes the `'stable'` version displayed by default to users.
-*   Optionally, you can enable **Pull Request previews**, where RTD builds the documentation for each PR, allowing reviewers to see the documentation changes before merging.
+This automated release pipeline ensures consistency, reduces manual errors, and streamlines the process of making new package versions available to the community immediately after a release is tagged in Git. Combined with CI (A.V.3) which ensures the tagged code is tested, it creates a robust automated path from development to deployment.
 
-**Workflow Summary:**
-1.  Developer makes changes to code (updating docstrings) and/or narrative documentation (`.rst` files) in a feature branch.
-2.  Opens a Pull Request.
-3.  (If enabled) Read the Docs builds a preview of the documentation for the PR. Reviewers check code and docs.
-4.  PR is merged into `main`.
-5.  Read the Docs detects the push to `main` and automatically rebuilds the `'latest'` version of the documentation website (e.g., `stellarphyslib.readthedocs.io/en/latest/`).
-6.  When a release tag (e.g., `v0.2.0`) is pushed to GitHub, Read the Docs detects it and builds the documentation for that specific version, often making it the default `'stable'` version (e.g., `stellarphyslib.readthedocs.io/en/stable/`).
+**A.IV.5 Automating Documentation Deployment (ReadTheDocs)**
 
-This automated workflow ensures that your package's documentation, hosted conveniently on Read the Docs, stays synchronized with both the ongoing development (`latest`) and official releases (`stable`), providing users with accurate and accessible information derived directly from your version-controlled source code and documentation files. It's an essential component of maintaining a high-quality, collaborative scientific Python package.
+Maintaining accurate and accessible documentation is crucial for the usability and adoption of any scientific software package. As outlined in Appendix A.IV.6, the combination of **Sphinx** for generating documentation from source files and docstrings, and **Read the Docs** ([readthedocs.org](https://readthedocs.org)) for automated hosting and building integrated with GitHub, provides the standard solution for collaborative documentation workflows in the Python ecosystem. This section details the setup for automating documentation deployment.
 
+**Prerequisites:**
+1.  **Working Sphinx Setup:** You must have a functional Sphinx documentation setup within your project repository (typically in a `docs/` directory), including a `docs/source/conf.py` file and your source files (`.rst` or `.md`). You should be able to build the documentation locally using `cd docs; make html`. Ensure `sphinx.ext.autodoc` and `sphinx.ext.napoleon` (or similar) are enabled in `conf.py` if you want to pull documentation from your code's docstrings.
+2.  **Read the Docs Account:** An account on [readthedocs.org](https://readthedocs.org).
+3.  **GitHub Repository:** Your package's source code hosted on GitHub.
+
+**Setup Steps:**
+1.  **Import Project on Read the Docs:** Log in to Read the Docs. Connect your GitHub account. Click "Import a Project" and select your package's repository (e.g., `stellarphyslib_project`). Read the Docs will usually detect it's a Sphinx project.
+2.  **Configure Build Environment (`.readthedocs.yaml`):** Create a file named `.readthedocs.yaml` in the **root directory** of your Git repository. This file tells Read the Docs how to build your documentation, ensuring a reproducible environment. A typical configuration includes:
+    ```yaml
+    # File: .readthedocs.yaml
+    version: 2
+    build:
+      os: ubuntu-22.04
+      tools:
+        python: "3.10" # Choose a Python version compatible with your package & Sphinx
+    sphinx:
+      configuration: docs/source/conf.py # Path to Sphinx config
+      # fail_on_warning: true # Optional: Make build fail on Sphinx warnings
+    python:
+      install:
+        - method: pip
+          path: . # Install your package so Sphinx autodoc can import it
+          extra_requirements:
+            - docs # Install deps listed in pyproject.toml [project.optional-dependencies.docs]
+                   # This 'docs' extra should contain: sphinx, sphinx_rtd_theme, napoleon, etc.
+    ```
+    *   This configuration specifies the OS, Python version, the location of `conf.py`, and how to install dependencies. The key part is `python.install` which installs the package itself (`path: .`) plus any dependencies listed under the `[docs]` extra in your `pyproject.toml`. You need to define this `[docs]` extra in `pyproject.toml` listing Sphinx, the theme (`sphinx-rtd-theme`), extensions (`sphinx-autoapi`, `numpydoc`, `myst-parser`), and any other packages needed *specifically* for building the documentation.
+3.  **Commit and Push `.readthedocs.yaml`:** Add the `.readthedocs.yaml` file to Git, commit, and push it to your GitHub repository.
+4.  **Activate Builds on Read the Docs:** Go to your project's settings on Read the Docs. Under the "Versions" tab, ensure that builds are active for the versions you care about, typically:
+    *   `latest`: Usually automatically tracks your default branch (`main` or `master`).
+    *   `stable`: Automatically activated when you push Git tags matching a version pattern (like `v*.*.*`). It will typically point to the highest version number tag.
+    You can also activate builds for specific branches or tags manually if needed.
+5.  **Enable Pull Request Previews (Optional but Recommended):** In your Read the Docs project settings (under "Advanced Settings" or similar), enable the option to build documentation previews for incoming Pull Requests on GitHub. This requires Read the Docs to have the necessary permissions (often set up during project import).
+
+**Automated Workflow:** Once configured, the automation works as follows:
+*   When code or documentation (`.rst`/`.md` files) changes are pushed to the default branch (`main`), Read the Docs receives a webhook notification from GitHub, checks out the latest code, creates a clean environment based on `.readthedocs.yaml`, installs dependencies, runs Sphinx to build the HTML docs, and updates the documentation hosted at `your-package-name.readthedocs.io/en/latest/`.
+*   When a new version tag (e.g., `v0.3.0`) is pushed to GitHub, Read the Docs detects it, checks out the code at that specific tag, builds the documentation for that version, and hosts it (often making it the default `stable` version at `your-package-name.readthedocs.io/en/stable/`).
+*   When a Pull Request is opened or updated on GitHub, Read the Docs builds a preview version of the documentation incorporating the PR's changes, and posts a status check back to the PR, allowing reviewers to click a link and see the rendered documentation changes before merging.
+
+This automated integration ensures that documentation hosted on Read the Docs accurately reflects the state of the codebase for both development versions and stable releases, significantly improving documentation quality and maintainability for collaborative scientific projects. It removes the burden of manually building and uploading documentation after every code update or release.
+
+```python
+# --- Code Example: Adding 'docs' dependencies to pyproject.toml ---
+# This shows how to define the optional dependencies needed by ReadTheDocs
+
+# (Add this section to your existing pyproject.toml file)
+pyproject_toml_extras = """
+[project.optional-dependencies]
+test = [
+    "pytest>=6.0",
+    "pytest-cov",
+]
+docs = [
+    "sphinx>=4.0",          # Documentation generator
+    "sphinx-rtd-theme",     # Common theme for ReadTheDocs
+    "sphinx-automodapi",    # Helps with API generation (alternative to autodoc+autosummary)
+    "numpydoc",             # Handles NumPy/Google style docstrings
+    "matplotlib",           # If plotting in examples/docs
+    "ipython",              # For sphinx-gallery or notebook integration if used
+    "myst-parser",          # To allow writing docs in Markdown
+    # Add any other packages imported *only* during documentation build
+]
+# Add other categories like 'dev' if needed
+"""
+
+print("--- Example addition to pyproject.toml for [docs] dependencies ---")
+print(pyproject_toml_extras)
+
+# --- Conceptual .readthedocs.yaml ---
+# (Content shown previously in text)
+readthedocs_yaml_content = """
+# File: .readthedocs.yaml
+version: 2
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.10"
+sphinx:
+  configuration: docs/source/conf.py
+python:
+  install:
+    - method: pip
+      path: . 
+      extra_requirements:
+        - docs 
+"""
+print("\n--- Example .readthedocs.yaml content ---")
+print(readthedocs_yaml_content)
+
+print("-" * 20)
+
+# Explanation:
+# 1. Shows how to define an optional dependency group named `[docs]` within the 
+#    `[project.optional-dependencies]` table in `pyproject.toml`. This list should 
+#    include Sphinx, the theme, any Sphinx extensions used (like `numpydoc` for 
+#    parsing NumPy-style docstrings), and any other Python packages that need to be 
+#    imported *only* when building the documentation (e.g., matplotlib if generating plots).
+# 2. Repeats the example `.readthedocs.yaml` configuration file. The key line 
+#    `extra_requirements: - docs` tells Read the Docs to install the dependencies 
+#    listed under `[docs]` after installing the main package, ensuring the build 
+#    environment has everything needed to run Sphinx correctly.
+```
+
+
+**Appendix V Summary**
+
+This appendix detailed the setup and benefits of automating the collaborative development workflow for a Python package using **Continuous Integration (CI)** and **Continuous Deployment/Delivery (CD)**, focusing on the `stellarphyslib` example. It introduced CI/CD concepts, explaining CI as the practice of frequently merging changes followed by automated builds and tests to catch errors early, and CD as the automation of the release process (Continuous Delivery) potentially extending to fully automated publishing (Continuous Deployment). The key **tools** involved in a typical Python CI/CD pipeline centered around GitHub were listed, including Git, GitHub itself, GitHub Actions (the CI/CD platform), Python/pip, `build` (for packaging), `twine` (for uploading), `pytest` (for testing), linters/formatters (`flake8`, `ruff`, `black`), Sphinx (for documentation generation), and Read the Docs (for documentation hosting).
+
+The process of setting up **Continuous Integration using GitHub Actions** was detailed. This involved creating a YAML workflow file (e.g., `.github/workflows/ci.yml`) triggered by pushes and pull requests. The workflow defines jobs running on specified operating systems and Python versions (using a matrix strategy), with steps to check out code, set up Python, install dependencies (including test extras from `pyproject.toml`), run linters, execute the `pytest` test suite (often with coverage reporting), and optionally check the package build process. Automating **releases to PyPI** using GitHub Actions was then covered, triggered by pushing version tags (e.g., `vX.Y.Z`). This workflow builds the package using `build` and uploads the distributions to PyPI using `twine`, utilizing securely stored PyPI API tokens (via GitHub Secrets) or preferably the modern OIDC trusted publishing mechanism. Finally, the appendix explained how to automate **documentation deployment using Sphinx and Read the Docs**, configuring Read the Docs (via `.readthedocs.yaml`) to monitor the GitHub repository and automatically build and host the documentation (from `.rst` files and code docstrings) for the `latest` development branch and `stable` tagged releases, often including previews for Pull Requests.
+
+---
+
+**References for Further Reading (APA Format, 7th Edition):**
+
+1.  **GitHub. (n.d.).** *GitHub Actions Documentation*. GitHub Docs. Retrieved January 16, 2024, from [https://docs.github.com/en/actions](https://docs.github.com/en/actions)
+    *(The official documentation for GitHub Actions, covering workflow syntax, triggers, runners, steps, secrets, contexts, and actions like `checkout` and `setup-python`, essential for Sec A.V.3 & A.V.4.)*
+
+2.  **Python Packaging Authority (PyPA). (n.d.).** *Packaging Python Projects*. PyPA. Retrieved January 16, 2024, from [https://packaging.python.org/en/latest/tutorials/packaging-projects/](https://packaging.python.org/en/latest/tutorials/packaging-projects/) (See also Publishing section: [https://packaging.python.org/en/latest/tutorials/publishing-packages/](https://packaging.python.org/en/latest/tutorials/publishing-packages/))
+    *(Official guide covering building packages with `build` and uploading with `twine`, including generating API tokens and using TestPyPI, relevant to Sec A.V.2 & A.V.4.)*
+
+3.  **Read the Docs. (n.d.).** *Read the Docs Documentation*. Read the Docs. Retrieved January 16, 2024, from [https://docs.readthedocs.io/en/stable/](https://docs.readthedocs.io/en/stable/)
+    *(Official documentation for configuring projects on Read the Docs, using `.readthedocs.yaml`, connecting with GitHub, and understanding automated builds, relevant to Sec A.V.2 & A.V.5.)*
+
+4.  **Pryce, N., & Freeman, S. (2021).** *Growing Object-Oriented Software, Guided by Tests*. Addison-Wesley Professional.
+    *(While focused on Test-Driven Development (TDD), this book emphasizes the importance of automated testing and how it integrates with continuous integration to build reliable software.)*
+
+5.  **Humble, J., & Farley, D. (2010).** *Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation*. Addison-Wesley Professional.
+    *(A seminal book on the principles and practices of Continuous Delivery, providing the foundational concepts behind automating the release pipeline discussed in this appendix.)*
