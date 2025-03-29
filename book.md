@@ -122,11 +122,22 @@ Recognizing that the scale and complexity of modern astrophysical simulations an
 -    [Chapter 41: GPU Computing for Astrophysics](chapter-41.md)
 -    [Chapter 42: Efficient I/O and Data Handling at Scale](chapter-42.md)
 
-[**Appendix I: Python Programming Essentials**](appendix-i.md)
+Okay, here is the Markdown list of the Appendices generated:
 
-[**Appendix II: Key Python Modules for Astrophysics**](appendix-ii.md)
+[**Appendix I:** Python Fundamentals for Astrocomputing](appendix-i.md)
 
-----------
+[**Appendix II:** Python Modules for Astrocomputing](appendix-ii.md)
+
+[**Appendix III:** Creating and Sharing Your Python Astro Module](appendix-iii.md)
+
+[**Appendix IV:** Collaborative Development with Git and GitHub](appendix-iv.md)
+
+[**Appendix V:** Automating Collaborative Development with CI/CD](appendix-v.md)
+
+[**Appendix VI:** Turning Your Module into a VO Service](appendix-vi.md)
+
+[**Appendix VII:** Interfacing with Legacy Astrophysical Code](appendix-vii.md)
+
 
 
 
