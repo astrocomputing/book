@@ -111,8 +111,6 @@ Shifting our focus from the analysis of existing observational or previously gen
 
 **Part VII: High-Performance Computing (HPC) for Astrophysics**
 
-Okay, here is a substantial introductory paragraph for Part VII, without mentioning specific chapter numbers or names.
-
 Recognizing that the scale and complexity of modern astrophysical simulations and data analysis tasks frequently overwhelm the capabilities of individual workstations, **Part VII: High-Performance Computing (HPC) for Astrophysics** addresses the essential techniques and tools required to leverage powerful parallel computing resources. As simulations grow to encompass billions of particles or grid cells and evolve over vast cosmic times, and as observational datasets from surveys like LSST reach petabyte scales requiring analysis across millions or billions of objects, utilizing HPC clusters and supercomputers becomes not just advantageous but absolutely necessary. This final part provides a practical introduction to the concepts and technologies underpinning HPC and parallel programming, focusing on how to effectively deploy and manage large-scale Python-based analyses and simulations in these environments. We begin by demystifying typical HPC cluster architectures, explaining the roles of compute nodes, head nodes, high-speed interconnects, parallel file systems, and crucially, how to interact with job scheduling systems (like SLURM or PBS) to submit, monitor, and manage computational tasks. We then delve into fundamental parallel programming concepts, discussing speedup, efficiency, Amdahl's Law, and contrasting task parallelism with the data parallelism paradigm dominant in large simulations, introducing Python's built-in `multiprocessing` and `threading` modules for single-node parallelism while noting their limitations. The core focus shifts to distributed-memory parallelism essential for multi-node cluster computing, introducing the concepts of the Message Passing Interface (MPI) standard and demonstrating its practical implementation in Python using the `mpi4py` library for communication (point-to-point and collective) between processes. We explore strategies for handling large numbers of independent tasks (high-throughput computing) and managing complex multi-step workflows, introducing powerful Python libraries like `Dask` for scalable parallel data analysis on distributed arrays and dataframes, alongside mentioning dedicated workflow management systems. Acknowledging the increasing importance of hardware accelerators, we introduce GPU computing, explaining the basic architecture and demonstrating how to leverage GPUs from Python using libraries like `CuPy` (for NumPy-like operations) and `Numba` (for writing custom CUDA kernels) to accelerate suitable data-parallel computations. Finally, recognizing that data input/output often becomes a critical bottleneck at scale, we discuss the challenges of parallel I/O, introduce concepts related to parallel file systems, demonstrate how to use parallel HDF5 efficiently with `h5py` and MPI for concurrent data access, and touch upon strategies like data compression and checkpointing essential for managing massive datasets and long-running jobs in HPC environments, thereby equipping the reader with the foundational knowledge to scale their astrocomputing tasks to meet the demands of modern research.
 
 -    [Chapter 37: Introduction to HPC Environments](chapter-37.md)
@@ -122,9 +120,9 @@ Recognizing that the scale and complexity of modern astrophysical simulations an
 -    [Chapter 41: GPU Computing for Astrophysics](chapter-41.md)
 -    [Chapter 42: Efficient I/O and Data Handling at Scale](chapter-42.md)
 
-**Appendix I: Python Programming Essentials**
+[**Appendix I: Python Programming Essentials**](appendix-i.md)
 
-**Appendix II: Key Python Modules for Astrophysics**
+[**Appendix II: Key Python Modules for Astrophysics**](appendix-ii.md)
 
 ----------
 
