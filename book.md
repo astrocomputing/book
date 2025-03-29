@@ -1,6 +1,7 @@
 ----------
 
 **Book Title:** Astrocomputing: Astrophysical Data Analysis and Process Simulation with Python
+
 **Author:** Luciano Silva, PhD
 
 **Introduction**
