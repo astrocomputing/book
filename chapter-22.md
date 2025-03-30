@@ -1,4 +1,4 @@
-<meta charset="utf-8"/>
+<head><meta charset="utf-8"/></head>
 
 **Chapter 22: Supervised Learning: Classification**
 
