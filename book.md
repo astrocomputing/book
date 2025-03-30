@@ -163,6 +163,18 @@ Bridging the gap between physical astronomical instrumentation, complex operatio
 -  [**Chapter 62:** AstroOps: Observation Scheduling and Management](chapter-62.md)
 -  [**Chapter 63:** AstroOps: Observation Execution and Data Management](chapter-63.md)
 
+**Part XI: Astronomical Workflows and Automation**
+
+While direct Python scripting is suitable for simpler workflows, managing complex pipelines with intricate dependencies, numerous steps, large datasets, and the need for robust execution across different environments (local, HPC, cloud) often benefits significantly from dedicated Workflow Management Systems (WMS). This chapter provides an overview of popular WMSs used in scientific computing, revisiting Snakemake and Nextflow (introduced conceptually in Sec 40.2) and adding Parsl. We detail Snakemake's make-like syntax using Python-based rules defined in a Snakefile, emphasizing its automatic dependency management based on input/output filenames and wildcard matching. We introduce Nextflow's dataflow-oriented approach using processes defined in its Groovy-based DSL, highlighting its strengths in process parallelization, containerization (Docker/Singularity), and cloud execution. We then focus on Parsl (Parallel Scripting Library), a Python-native library allowing workflows to be defined directly within Python scripts by decorating functions as parallel "apps" and implicitly defining dependencies through function arguments/outputs, offering flexibility and tight integration with Python environments and various execution backends (threads, processes, HPC schedulers, cloud). For each system, we discuss their core concepts, typical use cases, configuration for parallel execution, and pros and cons.
+
+[**Chapter 64:** Principles of Astronomical Workflows](chapter-64.md)
+[**Chapter 65:** Workflow Management with Python Scripting and Libraries](chapter-65.md)
+[**Chapter 66:** Workflow Management Systems (Snakemake, Nextflow, Parsl)](chapter-66.md)
+[**Chapter 67:** Introduction to Dask for Scalable Analysis](chapter-67.md)
+[**Chapter 68:** Implementing TESS Workflows with Lightkurve and WMS/Dask](chapter-68.md)
+[**Chapter 69:** Workflow Standardization and Replicability Tools](chapter-69.md)
+[**Chapter 70:** Case Study: End-to-End TESS Transit Search Workflow](chapter-70.md)
+
 
 **Appendices: Astrocomputing Toolkit and Development Practices**
 
