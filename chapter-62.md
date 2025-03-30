@@ -692,6 +692,332 @@ print("-" * 20)
 
 Simulating dynamic requests and interruptions adds significant complexity to the AstroOps workflow but is essential for realistically modeling observatory operations. It requires careful state management, clear preemption policies, and robust interaction between the scheduler, the execution engine, and the digital twin's environmental/status models. Testing these scenarios helps evaluate the responsiveness and efficiency of different scheduling strategies under realistic dynamic conditions.
 
+
+
+**Application 62.A: Implementing a Simple Priority-Based Scheduler**
+
+**(Paragraph 1)** **Objective:** Develop and demonstrate a basic Python implementation of an observation scheduler that prioritizes targets based on a predefined scientific ranking while also considering basic observability constraints (target altitude). This scheduler will take a list of pending observation requests and the current simulated time/location, and return the highest-priority observable target. Reinforces Sec 62.3.
+
+**(Paragraph 2)** **Astrophysical Context:** Real telescopes often operate with observation queues containing requests from various programs with different scientific priorities (e.g., assigned by a Time Allocation Committee). A fundamental task of the scheduling system is to select the next observation to perform, ensuring that higher-priority programs are favored when their targets are observable, while still respecting basic constraints like whether the target is currently above the horizon.
+
+**(Paragraph 3)** **Data Source:**
+    *   A list of `ObservationRequest` objects or dictionaries (as defined conceptually in Sec 62.1), each containing at least `request_id`, `target_coord` (an `astropy.coordinates.SkyCoord` object, or `None` for non-targeted calibrations), `priority` (integer, lower is higher priority), and `status` (e.g., 'QUEUED').
+    *   The current simulated time (`astropy.time.Time` object).
+    *   The telescope's location (`astropy.coordinates.EarthLocation` object).
+
+**(Paragraph 4)** **Modules Used:** `astropy.time`, `astropy.coordinates` (`SkyCoord`, `EarthLocation`, `AltAz`), `astropy.units`, standard Python lists/sorting.
+
+**(Paragraph 5)** **Technique Focus:** Implementing scheduling logic in Python. (1) Filtering a list of requests based on status ('QUEUED'). (2) Performing coordinate transformations using `astropy.coordinates` to calculate the current Altitude of each target. (3) Applying an observability constraint (e.g., Altitude > minimum threshold). (4) Sorting the list of observable targets based primarily on the `priority` field. (5) Selecting the top element from the sorted list as the next target. Handling non-targeted requests (like bias/dark) appropriately.
+
+**(Paragraph 6)** **Processing Step 1: Define Scheduler Function:** Create `def simple_priority_scheduler(pending_requests, current_time, observer_location, min_altitude=20*u.deg):`.
+
+**(Paragraph 7)** **Processing Step 2: Filter Observable Requests:** Initialize an empty list `observable_candidates`. Define the `AltAz` frame for the current time and location. Loop through `pending_requests`. If a request has `status=='QUEUED'`:
+    *   If `target_coord` is `None` (e.g., bias/dark), assume it's always observable for simplicity here and add it to `observable_candidates` (real system needs time constraints for calibrations too).
+    *   If `target_coord` exists, transform it to `AltAz`. If the resulting altitude (`.alt`) is greater than `min_altitude`, add the request to `observable_candidates`. Include `try...except` for coordinate transformation errors.
+
+**(Paragraph 8)** **Processing Step 3: Sort by Priority:** If `observable_candidates` is not empty, sort it using `observable_candidates.sort(key=lambda req: req.get('priority', 99))`. The `lambda` function extracts the priority value (using 99 as default if missing), ensuring lower numbers come first.
+
+**(Paragraph 9)** **Processing Step 4: Select and Return:** If the sorted `observable_candidates` list is not empty, return the *first* element (the highest priority observable request). Otherwise, return `None` (indicating no suitable target was found).
+
+**(Paragraph 10)** **Processing Step 5: Example Usage:** Create a sample list of `ObservationRequest` dictionaries/objects with varying coordinates and priorities. Define a sample `current_time` and `observer_location`. Call the `simple_priority_scheduler` function with these inputs and print the selected request ID and priority.
+
+**Output, Testing, and Extension:** The output is the selected `ObservationRequest` dictionary/object (or None) and print statements showing the selection process. **Testing:** Verify that the scheduler selects the highest priority target among those whose coordinates are currently above the `min_altitude` threshold. Test cases where all targets are below the horizon. Test cases where multiple targets have the same highest priority (the sort stability or secondary sort criteria, like submission time if added, would determine selection). Verify bias/dark frames are selected if appropriate. **Extensions:** (1) Add secondary sorting criteria to the `sort` key (e.g., sort by priority, then by airmass ascending). (2) Incorporate time window constraints specified within the requests during the filtering step. (3) Read requests from the SQLite database created in App 62.A instead of an in-memory list. (4) Add logic to update the status of the selected request (e.g., to 'SCHEDULED') in the list or database.
+
+```python
+# --- Code Example: Application 62.A ---
+# Note: Requires astropy
+
+import numpy as np
+from astropy.time import Time
+from astropy.coordinates import SkyCoord, EarthLocation, AltAz
+from astropy import units as u
+import operator # For potential itemgetter if using dicts
+
+print("Implementing Simple Priority-Based Scheduler:")
+
+# Assume ObservationRequest is a dictionary for simplicity here
+# Example: {'request_id':'...', 'target_coord': SkyCoord(...), 'priority': N, 'status':'QUEUED'}
+
+def simple_priority_scheduler(pending_requests, current_time, observer_location, min_altitude=20*u.deg):
+    """Selects the highest priority observable request."""
+    
+    print(f"\n--- Running Scheduler at {current_time.iso} ---")
+    if not observer_location:
+        print("Error: Observer location not provided.")
+        return None
+
+    observable_candidates = []
+    # Define AltAz frame for current time and location
+    try:
+        altaz_frame = AltAz(obstime=current_time, location=observer_location)
+    except Exception as e:
+        print(f"Error creating AltAz frame: {e}")
+        return None
+
+    # 1. Filter for observability
+    print("Checking observability for QUEUED requests:")
+    for req in pending_requests:
+        if req.get('status', 'UNKNOWN') != 'QUEUED':
+            continue
+
+        target_coord = req.get('target_coord')
+        req_id = req.get('request_id', 'Unknown')
+
+        if target_coord is None: 
+            # Handle non-targeted like Bias/Dark - assume always observable for now
+            if req.get('target_name') in ['BIAS', 'DARK']:
+                print(f"  Request {req_id}: Observable (Calibration)")
+                observable_candidates.append(req)
+            continue # Skip other non-targeted requests
+
+        # Check targeted requests
+        try:
+            target_altaz = target_coord.transform_to(altaz_frame)
+            if target_altaz.alt >= min_altitude:
+                 # TODO: Add checks for other constraints (time windows, etc.)
+                 print(f"  Request {req_id}: Observable (Alt={target_altaz.alt:.1f})")
+                 observable_candidates.append(req)
+            else:
+                 print(f"  Request {req_id}: Below horizon (Alt={target_altaz.alt:.1f})")
+                 
+        except Exception as e_coord:
+            print(f"  Warning: Could not transform coords for {req_id}: {e_coord}")
+            
+    if not observable_candidates:
+        print("Scheduler: No observable queued requests found.")
+        return None
+        
+    print(f"Found {len(observable_candidates)} observable candidates.")
+
+    # 2. Sort observable requests by priority (lower number = higher priority)
+    # Using get allows handling missing 'priority' key gracefully
+    observable_candidates.sort(key=lambda r: r.get('priority', 99)) 
+    
+    # 3. Select the highest priority one
+    next_obs = observable_candidates[0]
+    print(f"Scheduler Selected: {next_obs['request_id']} (Priority={next_obs.get('priority')})")
+    
+    # In a real system, update status here:
+    # next_obs['status'] = 'SCHEDULED' 
+    
+    return next_obs
+
+# --- Example Usage ---
+# Define observer location (e.g., Apache Point Observatory)
+apo = EarthLocation(lat='32d46m49s', lon='-105d49m13s', height=2788*u.m)
+# Define simulated current time
+sim_time = Time("2024-09-15T03:00:00", scale='utc') # Middle of night UT
+
+# Sample request queue (list of dictionaries)
+request_queue = [
+    {'request_id': 'BIAS_SET1', 'target_name':'BIAS', 'target_coord':None, 'priority':1, 'status':'QUEUED', 'config':{}, 'exp_time':0*u.s, 'num_exp':5},
+    {'request_id': 'M13_V', 'target_name':'M13', 'target_coord':SkyCoord.from_name('M13'), 'priority':3, 'status':'QUEUED', 'config':{'filter':'V'}, 'exp_time':60*u.s, 'num_exp':1},
+    {'request_id': 'M51_R', 'target_name':'M51', 'target_coord':SkyCoord.from_name('M51'), 'priority':2, 'status':'QUEUED', 'config':{'filter':'R'}, 'exp_time':120*u.s, 'num_exp':1},
+    {'request_id': 'LOW_PRIO', 'target_name':'NGC 7000', 'target_coord':SkyCoord.from_name('NGC 7000'), 'priority':5, 'status':'QUEUED', 'config':{'filter':'g'}, 'exp_time':30*u.s, 'num_exp':1},
+    {'request_id': 'HIGH_ALT_LOW_PRIO', 'target_name':'Polaris', 'target_coord':SkyCoord.from_name('Polaris'), 'priority':5, 'status':'QUEUED', 'config':{'filter':'i'}, 'exp_time':10*u.s, 'num_exp':1},
+    {'request_id': 'M51_B', 'target_name':'M51', 'target_coord':SkyCoord.from_name('M51'), 'priority':2, 'status':'COMPLETED', 'config':{'filter':'B'}, 'exp_time':120*u.s, 'num_exp':1}, # Already done
+]
+
+print("\n--- Running Scheduler Example ---")
+next_observation = simple_priority_scheduler(request_queue, sim_time, apo, min_altitude=30*u.deg)
+
+if next_observation:
+    print(f"\nNext Observation to Execute: {next_observation['request_id']}")
+else:
+    print("\nNo suitable observation selected.")
+
+print("-" * 20)
+```
+
+**Application 62.B: Simulating Target of Opportunity (ToO) Handling**
+
+**(Paragraph 1)** **Objective:** Extend the basic scheduling logic (e.g., from App 62.A) to demonstrate how a Target of Opportunity (ToO) alert might be handled within the simulated AstroOps workflow. This involves simulating the arrival of a high-priority request mid-sequence and implementing logic to potentially interrupt a lower-priority observation to execute the ToO. Reinforces Sec 62.6.
+
+**(Paragraph 2)** **Astrophysical Context:** Transient astronomical events like gamma-ray bursts, supernovae early after explosion, gravitational wave electromagnetic counterparts, or flaring active galactic nuclei often require immediate follow-up observations (ToOs) to capture crucial early-time data. Observatory scheduling systems must be able to receive external alerts, evaluate the feasibility and priority of the ToO request, interrupt the ongoing planned schedule if necessary and permitted, execute the ToO observation, and then resume normal operations or replan.
+
+**(Paragraph 3)** **Data Source:**
+    *   A baseline sequence of scheduled `ObservationRequest` objects (e.g., generated by App 62.A for a time block).
+    *   A simulated ToO alert arriving at a specific time during the sequence, containing target information (`SkyCoord`), observation requirements (filter, exposure time), and a very high priority level.
+    *   The `Telescope` twin object and current simulated time.
+
+**(Paragraph 4)** **Modules Used:** AstroOps scheduler/executor components, `astropy.time`, `astropy.coordinates`. Basic Python control flow (`if/else`).
+
+**(Paragraph 5)** **Technique Focus:** Simulating dynamic event handling within an operational workflow. (1) Setting up a main loop that simulates advancing time and executing observations from a pre-calculated schedule. (2) At a specific simulated time within the loop, injecting a new, high-priority ToO request into the system. (3) Implementing logic to handle the ToO: check its observability immediately. (4) Check if an observation (`current_obs`) is currently executing. (5) Implement a preemption policy: if `current_obs` exists and `ToO_priority < current_obs_priority`, decide to interrupt. (6) If interrupting: conceptually signal the executor to stop `current_obs` (update its status to 'INTERRUPTED'), command the telescope twin to slew to the ToO target, execute the ToO observation (advancing time), update the ToO status to 'COMPLETED'. (7) After ToO completion, decide the next step: either try to resume the `current_obs` (if possible/sensible) or simply call the scheduler again to pick the next best target from the remaining queue.
+
+**(Paragraph 6)** **Processing Step 1: Setup:** Generate a baseline ordered schedule `scheduled_list` for a time period (e.g., using App 62.A). Define the `too_request` dictionary/object with high priority (e.g., 0) and an arrival time `too_arrival_time` within the schedule period. Initialize the `Telescope` twin and `current_sim_time = schedule_start_time`.
+
+**(Paragraph 7)** **Processing Step 2: Main Execution Loop:** Start a loop iterating through the `scheduled_list` or advancing `current_sim_time`. Maintain a variable `current_obs` holding the request currently being "executed" (can be `None`).
+
+**(Paragraph 8)** **Processing Step 3: Inject ToO:** Inside the loop, check if `current_sim_time >= too_arrival_time`. If it is, and the ToO hasn't been handled yet:
+    *   Call a function `handle_too(too_request, current_obs, scheduler, executor, current_sim_time)`.
+
+**(Paragraph 9)** **Processing Step 4: `handle_too` Logic:** This function performs the checks described in Technique Focus step (5): observability, preemption policy. If interruption occurs:
+    *   Print "Interrupting observation X for ToO Y".
+    *   Update status of `current_obs` to 'INTERRUPTED'.
+    *   Simulate slew to ToO target (advance `current_sim_time`).
+    *   Simulate ToO exposure (advance `current_sim_time`).
+    *   Update `too_request` status to 'COMPLETED'.
+    *   Set `current_obs = None`.
+    *   Return `True` (indicating interruption occurred).
+If ToO cannot be observed or preemption doesn't happen, add ToO to the pending queue (maybe handled by scheduler implicitly if queue is dynamic) and return `False`.
+
+**(Paragraph 10)** **Processing Step 5: Continue Execution:** If `handle_too` returned `False` or no ToO was active, continue executing the `current_obs` from the original schedule (if any) or call the scheduler to get the next observation if the telescope is idle (`current_obs is None`). Update `current_sim_time` based on normal execution steps (slew, config, expose, readout). Log all actions and decisions.
+
+**Output, Testing, and Extension:** Output includes log messages showing the normal schedule execution, the arrival of the ToO alert, the decision process (interrupt or queue), the execution of the ToO (if applicable), and the resumption of the schedule. **Testing:** Verify the ToO is correctly identified as observable/unobservable. Check if the preemption logic works based on priorities. Confirm that time advances correctly during interruption and ToO execution. Ensure the original schedule resumes appropriately or replanning occurs conceptually. Test edge cases (ToO arrives when idle, ToO arrives during readout). **Extensions:** (1) Implement state saving/resumption for interrupted observations. (2) Implement a dynamic scheduler that fully replans the remaining schedule after a ToO instead of just resuming. (3) Simulate multiple ToO alerts arriving. (4) Add different preemption policies (e.g., based on completion fraction of current observation). (5) Integrate simulated weather alerts that also trigger schedule interruptions or replanning.
+
+```python
+# --- Code Example: Application 62.B ---
+# Note: Highly conceptual, builds on previous application structures.
+
+import time as pytime
+from astropy.time import Time
+from astropy.coordinates import SkyCoord, EarthLocation, AltAz
+from astropy import units as u
+import random
+
+# --- Assume classes/functions exist ---
+# ObservationRequest dict/class format
+# Telescope class with point(), expose(), check_observability(), calculate_slew_time() etc.
+# simple_scheduler function (or a more advanced one)
+# Placeholder Telescope for structure
+class Telescope:
+    def __init__(self, location): self.location=location; self.current_pointing=None; self.current_config={}; self.is_busy=False
+    def point(self, coord): print(f"  SIM: Slewing to {coord.ra.deg:.1f}, {coord.dec.deg:.1f}"); self.current_pointing = coord; pytime.sleep(0.01); return True
+    def expose(self, et, sky=None): print(f"  SIM: Exposing for {et}"); pytime.sleep(0.02); return "Simulated Data"
+    def check_observability(self, coord, t, min_alt=30*u.deg): return random.choice([True, False]) # Dummy check
+    def calculate_slew_time(self, target): return random.uniform(10, 60) * u.s
+    def estimate_config_time(self, cfg): return 5*u.s
+# ------------------------------------
+
+print("Simulating Target of Opportunity (ToO) Handling:")
+
+def handle_too(too_req, current_obs_req, telescope, current_t):
+    """Checks and potentially initiates ToO observation."""
+    print(f"\n*** Handling ToO Request: {too_req['request_id']} ***")
+    
+    # 1. Check Observability
+    if not telescope.check_observability(too_req['target_coord'], current_t):
+        print(f"  ToO {too_req['request_id']} is NOT currently observable.")
+        # Action: Add to pending queue (if not already there) for later scheduling
+        # For this simple simulation, we just report and don't execute.
+        return False, 0*u.s # Did not interrupt, no time taken yet
+
+    print(f"  ToO {too_req['request_id']} IS observable.")
+        
+    # 2. Check Preemption Policy
+    interrupt_current = False
+    if current_obs_req is None:
+        print("  Telescope is idle. Starting ToO.")
+        interrupt_current = True # Start immediately
+    else:
+        # Policy: Interrupt if ToO priority is strictly higher (lower number)
+        if too_req['priority'] < current_obs_req['priority']:
+            print(f"  Interrupting current obs '{current_obs_req['request_id']}' (Prio {current_obs_req['priority']}) for ToO (Prio {too_req['priority']}).")
+            interrupt_current = True
+            # TODO: Add logic to potentially save state of current_obs_req
+            current_obs_req['status'] = 'INTERRUPTED' # Update status
+        else:
+            print(f"  ToO priority ({too_req['priority']}) not high enough to interrupt '{current_obs_req['request_id']}' (Prio {current_obs_req['priority']}).")
+            # Action: Add ToO to pending queue for normal scheduling later
+            return False, 0*u.s # Did not interrupt
+
+    # 3. Execute ToO (Simulated)
+    if interrupt_current:
+        print(f"\n--- Executing ToO: {too_req['request_id']} ---")
+        too_start_time = current_t
+        # Slew to ToO target
+        slew_dur = telescope.calculate_slew_time(too_req['target_coord'])
+        print(f"  Slewing to ToO target (Est. {slew_dur:.1f})...")
+        telescope.point(too_req['target_coord'])
+        current_t += slew_dur
+        
+        # Configure (if needed - assuming ToO request has config)
+        config_dur = telescope.estimate_config_time(too_req.get('config',{}))
+        current_t += config_dur
+        # telescope.configure_instrument(**too_req.get('config',{}))
+        
+        # Expose
+        exp_time = too_req['exp_time']
+        num_exp = too_req['num_exp']
+        readout = 3 * u.s # Assume readout time
+        print(f"  Taking {num_exp} x {exp_time} exposures...")
+        for _ in range(num_exp):
+            # data = telescope.expose(exp_time) # Simulate exposure
+            current_t += exp_time
+            current_t += readout # Add readout time
+            
+        too_end_time = current_t
+        total_too_time = too_end_time - too_start_time
+        print(f"--- ToO {too_req['request_id']} Finished at {too_end_time.iso}. Duration: {total_too_time:.1f} ---")
+        too_req['status'] = 'COMPLETED'
+        return True, total_too_time # Interrupted/Executed, time taken
+
+    return False, 0*u.s # Should not be reached if logic correct
+
+# --- Conceptual Main Simulation ---
+print("\n--- Conceptual Simulation with ToO ---")
+location = EarthLocation(lat=0*u.deg, lon=0*u.deg, height=0*u.m)
+tele = Telescope(location)
+sim_start = Time("2025-01-01T00:00:00")
+sim_end = Time("2025-01-01T01:00:00")
+current_time = sim_start
+
+# Simplified queue and execution
+pending_queue = [
+    {'request_id': 'StdObs1', 'target_name':'TargetA', 'target_coord':SkyCoord(ra=10*u.deg, dec=10*u.deg), 'priority':3, 'status':'QUEUED', 'config':{'filter':'g'}, 'exp_time':60*u.s, 'num_exp':1},
+    {'request_id': 'StdObs2', 'target_name':'TargetB', 'target_coord':SkyCoord(ra=20*u.deg, dec=10*u.deg), 'priority':3, 'status':'QUEUED', 'config':{'filter':'r'}, 'exp_time':60*u.s, 'num_exp':1}
+]
+too_alert = {'request_id': 'ToO_GRB', 'target_name':'GRB250101A', 'target_coord':SkyCoord(ra=15*u.deg, dec=12*u.deg), 'priority':1, 'status':'ALERT', 'config':{'filter':'r'}, 'exp_time':180*u.s, 'num_exp':1}
+too_arrival_time = sim_start + 15*u.min
+
+current_observation = None
+too_handled = False
+
+while current_time < sim_end:
+    print(f"\nSim Time: {current_time.iso}")
+    
+    # Check for ToO arrival
+    if not too_handled and current_time >= too_arrival_time:
+        interrupted, time_taken = handle_too(too_alert, current_observation, tele, current_time)
+        current_time += time_taken # Advance time by ToO execution if it ran
+        too_handled = True
+        current_observation = None # Force scheduler to pick next after ToO
+        
+    # If telescope idle, get next from schedule (conceptual)
+    if current_observation is None:
+         # Find next best pending request (use simple scheduler conceptually)
+         # next_req = simple_scheduler(pending_queue, current_time, tele) 
+         # Simplified: just take first pending if available
+         next_req = None
+         for req in pending_queue:
+              if req['status'] == 'QUEUED':
+                   next_req = req
+                   break
+         if next_req:
+              print(f"Scheduler selects: {next_req['request_id']}")
+              current_observation = next_req
+              current_observation['status'] = 'EXECUTING'
+              # Simulate execution time (fixed for simplicity)
+              exec_time = next_req['exp_time'] + 60*u.s # Exp + Overhead
+              print(f"  Starting execution (simulated duration {exec_time})...")
+              current_time += exec_time
+              current_observation['status'] = 'COMPLETED'
+              print(f"  Finished {current_observation['request_id']} at {current_time.iso}")
+              # Remove from pending conceptually
+              pending_queue = [r for r in pending_queue if r['request_id'] != current_observation['request_id']]
+              current_observation = None 
+         else:
+              print("No more pending requests or nothing observable. Ending simulation.")
+              break # Exit loop if nothing to do
+              
+    # Add small time step if nothing happens (shouldn't occur if scheduler works)
+    # current_time += 1 * u.min 
+    
+print("\nSimulation Loop Ended.")
+
+print("-" * 20)
+```
+
 **Chapter 62 Summary**
 
 This chapter focused on the crucial aspects of **observation request management and scheduling** within the simulated AstroOps framework. It began by outlining how scientific and calibration observation requests can be represented programmatically, detailing the essential information required, such as target details (`SkyCoord`), instrument configurations, exposure parameters, constraints (timing, conditions), and priority levels, using Python dictionaries or dataclasses as examples. Methods for storing and managing these requests were discussed, ranging from simple in-memory lists or priority queues (`queue.PriorityQueue`) to more robust and persistent **databases** (e.g., using SQLite via the `sqlite3` module) capable of handling large numbers of requests and facilitating complex queries based on status, priority, or observability. The implementation of **simple scheduling algorithms** was explored, contrasting basic First-In-First-Out (FIFO) sequencing with **priority-based scheduling**, where requests are selected based on their assigned importance after passing basic observability checks (e.g., target altitude calculated using `astropy.coordinates`).
@@ -716,3 +1042,5 @@ The need for more **advanced scheduling algorithms** to optimize telescope effic
 
 5.  **Astropy Collaboration. (n.d.).** *Astropy Documentation: Coordinates (`astropy.coordinates`)*. Astropy Documentation. Retrieved January 16, 2024, from [https://docs.astropy.org/en/stable/coordinates/](https://docs.astropy.org/en/stable/coordinates/) (See also `astroplan` package: [https://astroplan.readthedocs.io/en/latest/](https://astroplan.readthedocs.io/en/latest/))
     *(Documentation for Astropy's coordinate utilities (SkyCoord, AltAz) essential for performing the observability checks discussed in Sec 62.3 and Application 62.A. The `astroplan` package provides higher-level tools specifically for observation planning and scheduling.)*
+
+
