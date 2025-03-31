@@ -705,4 +705,324 @@ This concluding chapter broadens the scope to address **statistical approaches**
 *   **Modules:** `numpy`, `scipy.fft`, `matplotlib.pyplot`.
 *   **Technique:** Generate a simulated time series of wideband Gaussian noise (`np.random.randn`). Add a weak, pure sine wave (representing the narrowband signal) at a specific frequency `f_signal` to the noise. Calculate the power spectrum using `scipy.fft.fft` and `abs()**2`. Plot the power spectrum (Power vs. Frequency). Identify the peak corresponding to `f_signal` standing out above the noise floor. Discuss conceptually how interference excision and statistical thresholding would be applied in a real search.
 
+
+**Part XV: Computational Aspects of Instrumentation & Calibration Pipelines**
+
+**(Part Introduction Paragraph)**
+
+Transitioning from the analysis of science-ready data and simulations, **Part XV: Computational Aspects of Instrumentation & Calibration Pipelines** delves into the crucial, often complex, computational processes required to transform raw signals captured by astronomical instruments into scientifically usable data products. Modern astronomical instruments, from ground-based CCD cameras and spectrographs to space-based multi-wavelength observatories and large interferometers, produce raw data imbued with instrumental signatures, detector artifacts, and environmental effects that must be meticulously characterized and removed. This part explores the computational algorithms, data models, and software engineering practices involved in building and executing the **calibration pipelines** that perform this transformation. We begin by examining the common instrumental effects encountered across different wavelength regimes and detector types, discussing the physical origins of artifacts like bias structures, dark current, non-linearity, flat-field variations, fringing, persistence, charge transfer inefficiency, optical distortions, and point spread function characteristics. We then investigate the computational techniques used for **detector characterization** and the creation of **master calibration files** (bias, darks, flats, bad pixel masks). Subsequent sections focus on the algorithmic implementation of core calibration steps, including detector linearization, bias/dark subtraction, flat-field correction, cosmetic cleaning (interpolating bad pixels, removing cosmic rays), and potentially flux calibration and background subtraction within the pipeline context. The specific challenges and computational methods for **astrometric and wavelength calibration**, determining the precise mapping between detector coordinates and sky/wavelength coordinates using reference catalogs or calibration lamp exposures, are addressed. We explore the structure and implementation of integrated **calibration pipelines**, discussing software design principles, data models (including intermediate products and quality flags), workflow management, operational considerations (running pipelines automatically at data centers), and the importance of rigorous testing and validation. Finally, we consider advanced topics such as modeling complex, time-varying instrument effects, handling data from detector mosaics or interferometers, and the increasing role of machine learning within calibration pipelines for tasks like artifact detection or quality assessment. Throughout this part, the emphasis is on understanding the computational underpinnings of turning raw detector signals into calibrated, science-ready datasets using Python tools and standard astronomical libraries.
+
+---
+
+**Chapter 92: Introduction to Astronomical Instrumentation and Detectors**
+
+**(Chapter Summary Paragraph)**
+
+This chapter provides the necessary background on astronomical instrumentation and detector technologies to understand the origins of instrumental signatures that calibration pipelines aim to remove. We give an overview of common **telescope optical designs** (reflectors, refractors, catadioptric) and mount types (alt-az, equatorial), discussing basic concepts like focal length, aperture, field of view, and pointing/tracking. We then focus on widely used **detector technologies**, primarily **CCDs (Charge-Coupled Devices)** dominating optical/UV/soft X-ray astronomy and **infrared arrays** (e.g., HgCdTe, InSb used by HST, JWST, Spitzer), explaining their basic operating principles (photon detection, charge collection/transfer, readout). Key **performance characteristics** like quantum efficiency (QE), read noise, dark current, gain, full well depth, and linearity are defined. We also briefly introduce detector technologies used in other regimes, such as bolometers (sub-mm/FIR), microchannel plates (UV/X-ray photon counting), and basic concepts of radio receivers and correlators. This foundational knowledge is essential for understanding the subsequent chapters on specific instrumental effects and calibration techniques.
+
+**92.1 Telescope Basics: Optics, Mounts, Pointing**
+**92.2 Detector Fundamentals: CCDs (Operation, Pixels, Readout)**
+**92.3 Detector Fundamentals: Infrared Arrays (HgCdTe, InSb)**
+**92.4 Key Detector Performance Metrics (QE, Read Noise, Dark Current, Gain, Linearity, Full Well)**
+**92.5 Other Detector Types (Bolometers, Photon Counting, Radio Receivers - Overview)**
+**92.6 From Photons to Raw Data Files (Counts, ADU)**
+
+---
+
+**Astrophysical Applications for Chapter 92:**
+
+**Application 92.A: Calculating Signal-to-Noise Ratio (SNR) Basics**
+
+*   **Objective:** Write a simple Python function using `astropy.units` to calculate the expected Signal-to-Noise Ratio (SNR) for a point source observation, considering photon noise from the source, background noise (sky + detector dark current), and detector read noise, based on fundamental detector characteristics.
+*   **Astrophysical Context:** Estimating the SNR is fundamental for planning observations – determining required exposure times to reach a desired detection significance or measurement precision. It depends directly on source brightness, background levels, and detector properties (QE, read noise, dark current).
+*   **Technique:** Define input parameters with units: source flux (photons/s), sky background (photons/s/pixel), dark current (e-/s/pixel), read noise (e-/pixel), exposure time (s), pixel scale (arcsec/pix), aperture size (pixels or arcsec), detector gain (e-/ADU, if needed), QE. Calculate total source counts, background counts, dark counts, read noise contribution. Combine noise sources in quadrature. SNR = Signal / sqrt(Total_Variance). Perform calculation using Astropy quantities.
+
+**Application 92.B: Simulating Basic CCD Readout Noise Pattern**
+
+*   **Objective:** Use `numpy` to generate a small 2D array simulating the readout noise pattern of a simple CCD amplifier, potentially including a very basic bias level offset or gradient.
+*   **Astrophysical Context:** Read noise is an intrinsic property of the detector readout electronics, adding a random pattern to every image. Understanding its characteristics (mean level, standard deviation, potential spatial structure) is necessary for calibration.
+*   **Modules:** `numpy`, `matplotlib.pyplot`.
+*   **Technique:** Create a 2D NumPy array. Add a constant bias level. Add Gaussian random noise with a specified standard deviation (`read_noise_adu`). Optionally add a slight gradient. Display the simulated bias frame using `plt.imshow`. Calculate image statistics (`mean`, `std`).
+
+---
+
+**Chapter 93: Common Instrumental Effects and Artifacts**
+
+**(Chapter Summary Paragraph)**
+
+Raw data directly from astronomical detectors is rarely scientifically useful without correcting for various **instrumental effects and artifacts** that imprint signatures onto the data. This chapter provides an overview of the most common effects encountered, particularly in optical and infrared imaging and spectroscopy using CCDs and IR arrays. We discuss the **bias level** (baseline electronic offset) and **read noise** introduced during readout. The accumulation of **dark current** (thermally generated electrons) during exposure is explained, along with its dependence on temperature and exposure time. **Pixel-to-pixel sensitivity variations** (flat field response) due to imperfections in the detector and optical path are covered. We examine non-linear detector response (**non-linearity**) near saturation. Transient artifacts like **cosmic rays** hitting the detector are described. Effects specific to certain detectors or regimes are introduced, such as **charge transfer inefficiency (CTI)** in CCDs, **persistence** (latent images) in IR arrays, **fringing** (interference patterns) in thinned CCDs at red wavelengths, detector **defects** (hot/dead pixels, bad columns), and optical **ghosts** or scattered light. Understanding the physical origin and appearance of these effects is the first step towards developing calibration strategies to remove or mitigate them.
+
+**93.1 Bias Level and Read Noise Structure**
+**93.2 Dark Current and Thermal Effects**
+**93.3 Flat Field Response (Pixel QE, Illumination, Vignetting)**
+**93.4 Detector Non-Linearity and Saturation**
+**93.5 Cosmic Rays: Detection and Impact**
+**93.6 Charge Transfer Inefficiency (CTI) in CCDs**
+**93.7 Persistence and Latent Images in IR Arrays**
+**93.8 Fringing, Ghosts, Scattered Light**
+**93.9 Detector Defects (Hot/Dead Pixels, Bad Columns)**
+
+---
+
+**Astrophysical Applications for Chapter 93:**
+
+**Application 93.A: Simulating Non-Linearity and Saturation Effects**
+
+*   **Objective:** Write a Python function that takes an ideal linear input signal (e.g., representing counts in a pixel as flux increases) and applies a simple non-linearity correction formula and a saturation limit to simulate the observed signal from a real detector near its full well capacity.
+*   **Astrophysical Context:** Detectors become non-linear as they approach saturation (full well depth). Ignoring this effect leads to incorrect photometry for bright sources. Calibration pipelines need to correct for non-linearity or flag saturated pixels.
+*   **Modules:** `numpy`, `matplotlib.pyplot`.
+*   **Technique:** Define function `apply_nonlinearity(ideal_counts, nonlinearity_coeffs, saturation_level)`. `nonlinearity_coeffs` could define a polynomial correction. Apply the formula. Apply saturation `observed[observed > saturation_level] = saturation_level`. Generate a range of `ideal_counts`. Plot `observed_counts` vs `ideal_counts` showing the linear regime, turnover, and saturation.
+
+**Application 93.B: Adding Cosmic Rays to a Simulated Image**
+
+*   **Objective:** Use `numpy` and potentially simple random placement logic to add simulated cosmic ray "hits" (typically sharp, localized spikes affecting one or a few pixels) onto a clean simulated astronomical image.
+*   **Astrophysical Context:** Cosmic rays are a significant contaminant in images. Algorithms are needed to detect and remove them. Simulating their appearance helps test these algorithms.
+*   **Modules:** `numpy`, `matplotlib.pyplot`, `random`.
+*   **Technique:** Start with a base image array. Define CR parameters (number, intensity, size). Loop `n_crays` times: choose random pixel (x, y); add high value to `image[y, x]`; potentially affect neighbors. Display image before and after.
+
+---
+
+**Chapter 94: Detector Characterization and Master Calibration Frames**
+
+**(Chapter Summary Paragraph)**
+
+To correct for the instrumental effects described in the previous chapter, calibration pipelines rely on **master calibration frames**. These are high signal-to-noise frames created by combining multiple raw calibration exposures taken under specific conditions (e.g., zero exposure time for bias, long exposures in the dark for darks, exposures of a uniformly illuminated source for flats). This chapter covers the standard procedures and computational techniques for creating these master frames. We discuss the acquisition strategy for **bias frames** and the process of combining them (typically using median or sigma-clipped mean stacking) to create a **master bias** frame representing the stable readout pattern. Similarly, we cover **dark frames**, their purpose (measuring dark current), acquisition (long exposures in darkness at specific temperatures), processing (bias subtraction), and combining to create a **master dark** (often scaled by exposure time). The acquisition and processing of **flat field frames** (dome flats, twilight flats, sky flats) are detailed, including bias/dark subtraction, combination, and normalization to create a **master flat** representing pixel-to-pixel sensitivity variations for a specific filter. Finally, techniques for identifying and creating **bad pixel masks** (identifying hot, dead, or unstable pixels from bias, dark, and flat frames) are discussed. Using Python libraries like `numpy` for array operations and `astropy.ccdproc` (or similar custom functions) for combining images is central to this chapter.
+
+**94.1 Acquiring Calibration Frames (Bias, Dark, Flat)**
+**94.2 Creating the Master Bias Frame (Median/Sigma-Clip Stacking)**
+**94.3 Creating the Master Dark Frame (Bias Subtraction, Scaling, Combining)**
+**94.4 Creating the Master Flat Field (Bias/Dark Subtraction, Combining, Normalization)**
+**94.5 Handling Filter-Dependent Calibrations (Flats)**
+**94.6 Identifying Bad Pixels and Creating Masks**
+**94.7 Python Tools for Image Combination (`numpy`, `astropy.ccdproc`)**
+
+---
+
+**Astrophysical Applications for Chapter 94:**
+
+**Application 94.A: Creating a Master Bias Frame from Simulated Raw Biases**
+
+*   **Objective:** Write a Python script that simulates loading multiple raw bias FITS files (each containing a bias level + read noise) and combines them using a median stacking procedure with `numpy` or `astropy.ccdproc` to create and save the final master bias FITS file.
+*   **Astrophysical Context:** Generating a high-quality master bias is the standard first step in CCD image calibration, removing pattern noise and characterizing read noise.
+*   **Modules:** `numpy`, `astropy.io.fits`, `os`, `glob`, potentially `astropy.ccdproc`.
+*   **Technique:** Use `glob` to get list of bias filenames. Read data into a list or 3D array. Use `np.median(..., axis=0)` or `ccdproc.combine(..., method='median')` to compute median stack. Create new FITS HDU with master bias data. Save FITS file.
+
+**Application 94.B: Combining and Normalizing Flat Field Frames**
+
+*   **Objective:** Assume multiple bias-subtracted raw flat field frames (for a specific filter) are available. Write a Python script using `numpy` or `astropy.ccdproc` to combine these using median or average stacking (potentially with sigma-clipping) and then normalize the resulting combined flat field image (e.g., by dividing by its median value) to create the final master flat field.
+*   **Astrophysical Context:** Master flats correct for relative pixel sensitivity. Normalization ensures flat fielding doesn't change the overall flux scale.
+*   **Modules:** `numpy`, `astropy.io.fits`, `astropy.stats` (optional for sigma clipping), potentially `astropy.ccdproc`.
+*   **Technique:** Load bias-subtracted flat frames into 3D array. Combine using `np.median(..., axis=0)` or sigma-clipped mean. Calculate normalization factor (e.g., `np.median(combined_flat)`). Normalize `master_flat = combined_flat / norm_value`. Handle potential division by zero. Save master flat FITS file.
+
+---
+
+**Chapter 95: Core Calibration Steps: Implementation**
+
+**(Chapter Summary Paragraph)**
+
+With master calibration frames created (Chapter 94), this chapter focuses on the implementation of the core steps involved in applying these calibrations to raw science images using Python. We detail the process of **bias subtraction** (subtracting the master bias frame from the science frame) and **dark subtraction** (subtracting a scaled master dark frame, accounting for exposure time differences). The crucial step of **flat fielding** (dividing the bias/dark-subtracted science image by the normalized master flat field for the corresponding filter) to correct for pixel sensitivity and illumination variations is implemented. Techniques for handling **bad pixels** identified in the mask (Chapter 94) are discussed, typically involving interpolation from neighboring good pixels or flagging them in quality maps. Algorithms for detecting and removing **cosmic rays** using libraries like `astroscrappy` (based on L.A.Cosmic) or sigma-clipping techniques on dithered exposures are explored. We also touch upon correcting for **detector non-linearity** using calibration curves, and basic **background/sky subtraction** methods that might be applied within the pipeline. The `astropy.ccdproc` package, which provides a convenient framework and functions for orchestrating many of these CCD calibration steps, is highlighted.
+
+**95.1 Bias Subtraction**
+**95.2 Dark Subtraction and Scaling**
+**95.3 Flat Fielding**
+**95.4 Bad Pixel Correction (Interpolation/Masking)**
+**95.5 Cosmic Ray Rejection (`astroscrappy`, Sigma Clipping)**
+**95.6 Non-Linearity Correction**
+**95.7 Basic Background/Sky Subtraction**
+**95.8 Using `astropy.ccdproc` for Orchestration**
+
+---
+
+**Astrophysical Applications for Chapter 95:**
+
+**Application 95.A: Calibrating a Science Image using Master Frames**
+
+*   **Objective:** Write a Python script that takes a raw science FITS image filename and the filenames for pre-computed master bias, master dark (optional), and master flat FITS files, performs the standard calibration sequence (bias subtraction, dark subtraction if applicable, flat fielding) using NumPy array operations or `astropy.ccdproc`, and saves the calibrated science image.
+*   **Astrophysical Context:** This represents the core image calibration process applied to every science exposure to prepare it for analysis.
+*   **Modules:** `numpy`, `astropy.io.fits`, potentially `astropy.ccdproc`.
+*   **Technique:** Define a function `calibrate_science_frame(...)`. Load raw science, master bias, master flat, optional master dark. Perform operations: `cal1 = raw - bias`; if dark, `cal2 = cal1 - dark * scale`; else `cal2 = cal1`; `calibrated = cal2 / flat`. Or use `ccdproc.ccd_process` function with appropriate arguments for bias, dark, flat. Update FITS header. Save calibrated FITS.
+
+**Application 95.B: Applying Cosmic Ray Rejection with `astroscrappy`**
+
+*   **Objective:** Use the `astroscrappy` Python package (implementing the L.A.Cosmic algorithm) to detect and mask cosmic rays in a simulated science image (potentially one with simulated CRs added, as in App 93.B), assumed to be already bias/dark/flat corrected.
+*   **Astrophysical Context:** Cosmic rays must be identified and masked or removed before performing accurate photometry or morphological analysis on astronomical images.
+*   **Modules:** `astroscrappy`, `numpy`, `astropy.io.fits`, `matplotlib.pyplot`.
+*   **Technique:** Load input calibrated science image. Import `detect_cosmics` from `astroscrappy`. Call `crmask, cleaned_array = detect_cosmics(image_data, gain=..., readnoise=..., sigclip=..., objlim=..., ...)`, providing necessary gain/readnoise or using defaults, tuning detection parameters. Display original image, `crmask`, and optionally `cleaned_array`. Save mask as FITS extension or separate file.
+
+---
+
+**Chapter 96: Astrometric and Photometric Calibration**
+
+**(Chapter Summary Paragraph)**
+
+After instrumental signatures are removed (Chapter 95), the next crucial steps often involve **astrometric calibration** (determining the precise mapping between image pixel coordinates and celestial coordinates like RA/Dec) and **photometric calibration** (converting instrument counts or fluxes into standard magnitude systems or physical flux units). This chapter covers the computational techniques for both. For astrometry, we discuss matching detected sources in an image against reference catalogs (like Gaia) using pattern matching algorithms, fitting the **World Coordinate System (WCS)** parameters (tangent plane projection coefficients, distortions) using tools like `astropy.wcs` and potentially external solvers like `astrometry.net` (often via wrappers like `astroquery`). For photometry, we cover the concept of **aperture corrections**, determining the **photometric zeropoint** (the magnitude corresponding to 1 count/sec) by observing standard stars with known magnitudes, and accounting for **atmospheric extinction** (for ground-based data) and **color terms** (filter-specific detector responses). Techniques for applying these calibrations to convert instrumental magnitudes to standard magnitudes (e.g., AB or Vega systems) are presented. Python libraries like `astropy.wcs`, `photutils`, `astroquery`, and potentially specialized calibration fitting code are relevant.
+
+**96.1 The Need for Astrometric Calibration (WCS)**
+**96.2 Source Matching with Reference Catalogs (Gaia, etc.)**
+**96.3 Fitting WCS Solutions (`astropy.wcs`, `astrometry.net` concepts)**
+**96.4 The Need for Photometric Calibration**
+**96.5 Standard Stars and Photometric Systems (Vega, AB)**
+**96.6 Determining Photometric Zeropoints**
+**96.7 Atmospheric Extinction Correction**
+**96.8 Color Terms and Transformations**
+**96.9 Applying Photometric Calibration**
+
+---
+
+**Astrophysical Applications for Chapter 96:**
+
+**Application 96.A: Performing a Simple WCS Fit using Catalog Matching**
+
+*   **Objective:** Simulate a scenario where sources are detected in an uncalibrated image (pixel coordinates `x, y`) and cross-matched with a reference catalog (e.g., Gaia) providing accurate RA/Dec for some of the sources. Use `astropy.wcs` and `astropy.modeling.fitting` to perform a simple linear WCS fit (e.g., fitting the CD matrix and CRVAL parameters assuming a TAN projection and known CRPIX) based on the matched (pixel, sky) coordinates.
+*   **Astrophysical Context:** Accurate WCS solutions are fundamental for identifying objects, comparing observations across different instruments or epochs, and performing precise measurements. Fitting WCS based on reference stars is a standard procedure.
+*   **Modules:** `astropy.wcs`, `astropy.modeling`, `astropy.coordinates`, `numpy`, `scipy.optimize` (used by fitter).
+*   **Technique:** Create simulated matched lists of `(x, y)` pixel coordinates and corresponding `(ra, dec)` `SkyCoord` objects. Create an initial `astropy.wcs.WCS` object with basic header info (CTYPE, approximate CRVAL/CRPIX). Define an `astropy.modeling` model that uses the WCS object's `pixel_to_world()` method. Use `fitting.LevMarLSQFitter` to fit the WCS parameters (e.g., CRVAL, CD matrix elements) by minimizing the difference between WCS-predicted sky coordinates and catalog sky coordinates for matched sources. Evaluate resulting WCS accuracy (RMS residuals).
+
+**Application 96.B: Calculating Photometric Zeropoint from Standard Star Observations**
+
+*   **Objective:** Simulate aperture photometry measurements (instrumental magnitude `m_inst = -2.5*log10(counts/exptime)`) for several standard stars observed in a specific filter during a night. Given their known standard magnitudes (`m_std`) in that filter, calculate the photometric zeropoint (`ZP = m_std - m_inst`) for the night, potentially including a simple airmass correction term (`ZP = m_std - m_inst + k*X`, where X is airmass).
+*   **Astrophysical Context:** The zeropoint links the instrumental magnitude system to a standard photometric system. It must be determined using standard stars to calibrate science target magnitudes.
+*   **Modules:** `numpy`, `matplotlib.pyplot`, `scipy.stats` (for linear regression if fitting airmass term).
+*   **Technique:** Create simulated data: standard star IDs, `m_std`, `m_inst`, observed airmass `X`. Calculate `diff = m_std - m_inst`. Plot `diff` vs. `X`. Perform linear fit `diff = ZP + k*X` using `linregress` or `np.polyfit` to determine `ZP` and extinction coefficient `k`. Calculate average zeropoint.
+
+---
+
+**Chapter 97: Calibration Pipelines: Design and Implementation**
+
+**(Chapter Summary Paragraph)**
+
+This chapter synthesizes the concepts from previous chapters to discuss the **design and implementation of integrated calibration pipelines**. We explore common **pipeline architectures**, contrasting sequential processing with potentially more parallelizable designs. The importance of robust **data models** for representing raw data, intermediate products (e.g., master calibration frames), final calibrated data, and associated metadata (including quality flags and provenance) is emphasized. We discuss **software design principles** for building maintainable and extensible pipelines, advocating for modular functions/classes, clear interfaces, and good coding practices. Strategies for pipeline **configuration and parameter management** (e.g., using config files) are covered. The role of **workflow management systems** (Chapter 66) or orchestration libraries (like `astropy.ccdproc`) in managing the execution flow, dependencies, and error handling for complex pipelines is highlighted. Finally, the critical aspects of **pipeline testing and validation** – ensuring each step performs correctly and the final data products meet scientific requirements – are discussed, including comparisons with reference pipelines or established results.
+
+**97.1 Pipeline Architecture Overview (Sequential, Parallel)**
+**97.2 Data Models for Raw, Calibration, and Processed Data**
+**97.3 Software Design Principles for Pipelines (Modularity, Interfaces)**
+**97.4 Configuration and Parameter Management**
+**97.5 Orchestration: Scripts vs. WMS vs. Libraries (`ccdproc`)**
+**97.6 Error Handling, Logging, and Quality Control**
+**97.7 Pipeline Testing and Validation Strategies**
+
+---
+
+**Astrophysical Applications for Chapter 97:**
+
+**Application 97.A: Designing a Data Model for a Simple Calibration Pipeline**
+
+*   **Objective:** Define Python classes or dictionaries to represent the data objects flowing through a basic image calibration pipeline (Raw Frame, Master Bias, Master Flat, Calibrated Frame, Bad Pixel Mask). Specify the essential data arrays and metadata attributes each object should contain.
+*   **Astrophysical Context:** Well-defined data models are crucial for robust pipelines, ensuring data and metadata are handled consistently between processing steps.
+*   **Modules:** Basic Python classes or `dataclasses`. Potentially `astropy.nddata.CCDData` as a base.
+*   **Technique:** Define classes (`RawFrame`, `MasterBias`, etc.) holding data (NumPy array), header (dict or `fits.Header`), filename, relevant metadata (filter, exposure time, processing history). Define conceptual load/save methods.
+
+**Application 97.B: Implementing a Simple Pipeline using `astropy.ccdproc`**
+
+*   **Objective:** Use the `astropy.ccdproc` package to perform basic CCD image calibration (overscan correction, bias subtraction, flat fielding) on a simulated raw FITS image using pre-computed master calibration frames, demonstrating the package's convenience functions and workflow orchestration capabilities.
+*   **Astrophysical Context:** `ccdproc` provides a high-level, Astropy-integrated framework for common CCD reduction tasks, simplifying implementation.
+*   **Modules:** `astropy.ccdproc`, `astropy.io.fits`, `astropy.nddata`, `numpy`.
+*   **Technique:** Load raw science image, master bias, master flat into `CCDData` objects. Use `ccdproc.subtract_bias()`, `ccdproc.flat_correct()` functions. Explore other `ccdproc` functions (`create_deviation`, `cosmicray_lacosmic`). Save final calibrated `CCDData` object to FITS.
+
+---
+
+**Chapter 98: Advanced Calibration Topics and Instrument Modeling**
+
+**(Chapter Summary Paragraph)**
+
+This final chapter touches upon more **advanced calibration challenges** and the increasing role of detailed **instrument modeling** in achieving high-precision results. We discuss techniques for handling more complex instrumental effects, such as correcting for **Charge Transfer Inefficiency (CTI)** in CCDs (using forward modeling or empirical corrections), modeling and removing **persistence** in IR arrays, dealing with complex optical **distortions** (requiring higher-order WCS fits or lookup tables), and handling spatially variable **Point Spread Functions (PSFs)**. The concept of building comprehensive **instrument simulators** that model the physics of the telescope and detector to generate highly realistic mock data is introduced, highlighting their use for pipeline development, testing analysis algorithms, and understanding subtle systematic effects. We also consider the calibration challenges specific to complex instruments like **Integral Field Units (IFUs)** or **interferometers**. Finally, the growing use of **machine learning** techniques within calibration pipelines (e.g., for artifact detection, PSF modeling, or background estimation) is briefly discussed as a future direction.
+
+**98.1 Correcting Charge Transfer Inefficiency (CTI)**
+**98.2 Modeling and Removing Persistence**
+**98.3 Handling Complex Optical Distortions**
+**98.4 Spatially Variable PSFs**
+**98.5 Building Instrument Simulators**
+**98.6 Calibration Challenges for IFUs and Interferometers**
+**98.7 Machine Learning Applications in Calibration**
+
+---
+
+**Astrophysical Applications for Chapter 98:**
+
+**Application 98.A: Conceptual Design of a Simple Instrument Simulator**
+
+*   **Objective:** Outline the components and workflow for a basic Python-based instrument simulator that takes a noiseless "truth" image (e.g., from a simulation or analytical model) and applies simplified models of key instrumental effects (PSF convolution, pixelation, bias offset, read noise, dark current, flat field, potentially Poisson noise) to generate a simulated raw image.
+*   **Astrophysical Context:** Instrument simulators are vital tools for understanding performance, developing pipelines, testing analysis software, and interpreting observations.
+*   **Modules:** `numpy`, `scipy.ndimage` or `astropy.convolution`, `astropy.modeling`.
+*   **Technique:** Define input (truth image). Define instrument parameters (PSF model, pixel scale, gain, read noise, dark rate, flat map, bias level). Implement steps: Convolve truth with PSF; Resample to pixels; Add dark; Apply flat; Add Poisson noise; Convert to ADU; Add read noise; Add bias. Return simulated raw image.
+
+**Application 98.B: Denoising an Image with Simple ML (Autoencoder Concept)**
+
+*   **Objective:** Conceptually describe how a simple Machine Learning model, specifically a convolutional autoencoder (related to CNNs, Sec 24.3), could be trained (using libraries like TensorFlow/Keras or PyTorch) to denoise astronomical images, potentially learning to remove noise or even specific artifacts like cosmic rays more effectively than traditional filtering methods in some cases.
+*   **Astrophysical Context:** ML techniques are increasingly explored for image processing tasks like denoising, deconvolution, and artifact removal, sometimes outperforming classical algorithms but requiring large training sets and validation.
+*   **Modules:** Conceptual (TensorFlow/Keras or PyTorch).
+*   **Technique:** Describe autoencoder architecture (encoder CNN -> latent space -> decoder CNN). Describe training: use pairs of clean (truth) and noisy images; train network to minimize difference (e.g., MSE) between decoder output and clean truth. Once trained, apply to new noisy images. Discuss need for training data and validation.
+
+Okay, let's add two more advanced chapters to Part XV, Chapters 99 and 100, focusing on more sophisticated aspects of calibration and instrument modeling.
+
+---
+
+**(Continuing Part XV Structure)**
+
+**Chapter 99: Advanced PSF Modeling and Deconvolution**
+
+**(Chapter Summary Paragraph)**
+
+Building on the introduction of PSFs and basic convolution, this chapter delves into more advanced techniques for characterizing and utilizing the **Point Spread Function (PSF)**, and introduces the concept of **deconvolution**. We explore methods for **empirical PSF modeling** directly from images, such as stacking unsaturated stars or using dedicated algorithms (e.g., `photutils` PSF building tools, PSFEx). The challenge of **spatially variable PSFs**, where the PSF shape changes across the detector field of view due to optical aberrations or detector effects, is addressed, discussing modeling approaches like polynomial interpolation of PSF parameters or principal component analysis (PCA) of PSF shapes. We then introduce **deconvolution algorithms** (like Richardson-Lucy, Maximum Entropy methods) which attempt to mathematically invert the blurring effect of the PSF to recover a higher-resolution estimate of the true underlying sky brightness distribution. The practical implementation and limitations of these iterative algorithms, including noise amplification and convergence issues, are discussed. Python libraries offering deconvolution functionalities (`scipy.signal`, potentially specialized packages) are considered.
+
+**99.1 Limitations of Simple PSF Models (Gaussian, Moffat)**
+**99.2 Empirical PSF Modeling from Images (Stacking, PSFEx concepts)**
+**99.3 Handling Spatially Variable PSFs (Modeling Variations)**
+**99.4 Introduction to Deconvolution Principles (Inverse Problem)**
+**99.5 Richardson-Lucy Algorithm**
+**99.6 Maximum Entropy Methods (MEM)**
+**99.7 Practical Considerations: Noise, Convergence, Artifacts**
+**99.8 Python Tools for Advanced PSF Modeling and Deconvolution**
+
+---
+
+**Astrophysical Applications for Chapter 99:**
+
+**Application 99.A: Building an Empirical PSF Model with `photutils`**
+
+*   **Objective:** Use `photutils` tools to extract unsaturated stars from a simulated astronomical image, build an average empirical PSF model (e.g., using image stacking or fitting a functional model like `IntegratedGaussianPRF` to the stacked data), and visualize the resulting PSF model.
+*   **Astrophysical Context:** Accurate PSF models derived directly from the observation are crucial for high-precision PSF photometry, morphological analysis, and deconvolution.
+*   **Modules:** `photutils`, `astropy.table`, `astropy.stats`, `numpy`, `matplotlib.pyplot`.
+*   **Technique:** Load image. Detect sources (`DAOStarFinder` or similar). Select bright, non-saturated, isolated stars based on magnitude and proximity criteria. Extract cutouts around these stars using `photutils.datasets.make_cutouts`. Align cutouts (e.g., using `photutils.centroids`). Combine cutouts using sigma-clipped mean or median (`photutils.psf.extract_stars`, `photutils.psf.EPSFBuilder` conceptually). Fit a 2D model (`photutils.psf.IntegratedGaussianPRF`, `photutils.psf.FittableImageModel`) to the stacked PSF image or use the stacked image directly as an empirical PSF model. Visualize the resulting model.
+
+**Application 99.B: Simple Richardson-Lucy Deconvolution**
+
+*   **Objective:** Apply a basic implementation or library function for the Richardson-Lucy deconvolution algorithm to a simulated blurred image (intrinsic image convolved with a known PSF, plus noise) to attempt to recover a sharper image. Compare the result with the original intrinsic image and the blurred image.
+*   **Astrophysical Context:** Deconvolution aims to reverse the blurring effect of the telescope/atmosphere, potentially revealing finer details in images of galaxies, nebulae, or crowded fields, although it must be used cautiously due to noise amplification.
+*   **Modules:** `numpy`, `matplotlib.pyplot`, `scipy.signal` (potentially `wiener`, `richardson_lucy` if available and suitable), or `skimage.restoration.richardson_lucy`, or a simple custom Python implementation. `astropy.convolution` (for blurring).
+*   **Technique:** Create a simple "truth" image (e.g., points or simple shapes). Define a PSF (e.g., Gaussian kernel). Convolve truth with PSF using `convolve_fft` to create blurred image. Add noise. Implement the iterative Richardson-Lucy update rule: `estimate_k+1 = estimate_k * [ (observed / (estimate_k * PSF)) * PSF_flipped ]` (where '*' denotes convolution, '/' element-wise division, PSF_flipped is PSF rotated 180 deg). Run for a chosen number of iterations. Display truth, blurred+noisy image, and deconvolved image. Discuss effects of noise and number of iterations.
+
+---
+
+**Chapter 100: Pipeline Operations, Testing, and Validation**
+
+**(Chapter Summary Paragraph)**
+
+This final chapter focuses on the operational aspects of running, testing, and validating large-scale **calibration and data processing pipelines**, connecting back to AstroOps principles (Chapter 59) and workflow management (Part XI). We discuss strategies for **pipeline execution** on different scales, from running on single machines to deploying on HPC clusters or cloud platforms, potentially using workflow managers (Snakemake, Nextflow, Parsl) or custom orchestration scripts. The critical importance of comprehensive **pipeline testing** is emphasized, covering unit tests for individual components, integration tests verifying interactions between steps, and end-to-end tests processing realistic simulated or real data to validate the entire pipeline's output against known results or scientific requirements. **Validation strategies** are explored, including comparison with outputs from independent pipelines, reprocessing standard calibration datasets, and assessing the quality and scientific usability of the final data products (e.g., checking photometric stability, astrometric residuals, background levels). We discuss **version control** not just for code but for pipeline configurations and calibration files, ensuring **provenance** and **reproducibility**. Finally, we consider aspects of **operational monitoring**, logging, and quality assurance necessary for running pipelines routinely in an observatory or survey context.
+
+**100.1 Pipeline Execution Environments (Local, HPC, Cloud)**
+**10.2 Orchestrating Pipeline Steps (Scripts, WMS revisited)**
+**10.3 Unit Testing for Calibration Modules**
+**10.4 Integration Testing for Pipeline Stages**
+**10.5 End-to-End Testing and Validation Data Sets**
+**10.6 Comparing Pipeline Outputs and Assessing Quality**
+**10.7 Version Control, Provenance, and Reproducibility**
+**10.8 Operational Monitoring and Quality Assurance**
+
+---
+
+**Astrophysical Applications for Chapter 100:**
+
+**Application 100.A: Designing an Integration Test for a Calibration Step**
+
+*   **Objective:** Outline the design of an integration test (conceptually using `pytest`) for a specific part of the calibration pipeline, e.g., testing the flat-fielding step (App 95.A/B). The test should verify that the flat-fielding function correctly uses both bias-subtracted science data and a master flat file as input and produces an output with the expected properties (e.g., flattened background, correct handling of bad pixels if masked in flat).
+*   **Astrophysical Context:** Integration tests ensure that different components or steps of the pipeline work correctly together, verifying interfaces and data flow beyond individual unit tests.
+*   **Technique:** Define necessary input files for the test (small simulated bias-subtracted science frame, small simulated master flat, potentially a bad pixel mask). Write a `pytest` test function `test_flat_fielding_step()`. Inside: call the flat-fielding function/script being tested with the prepared inputs. Perform assertions on the output: check output data type and shape; verify background regions are now statistically flatter than before; check that bad pixels in the input flat are handled appropriately (e.g., become NaN or flagged in output mask); potentially check if source fluxes are approximately conserved (if flat is normalized correctly).
+
+**Application 100.B: Version Control Strategy for Calibration Files**
+
+*   **Objective:** Discuss and propose a strategy using Git (and potentially Git LFS - Large File Storage) for version controlling the *master calibration files* (bias, dark, flat, masks) associated with a specific instrument or observing run, ensuring traceability and reproducibility when processing data taken at different times or with different pipeline versions.
+*   **Astrophysical Context:** Master calibration files change over time as detectors age or instrument configurations change. Using the correct set of calibration files corresponding to the science data acquisition time is critical for accurate reduction. Version control helps manage these different calibration versions.
+*   **Technique:** Discuss storing calibration FITS files in a dedicated Git repository. Use **Git LFS** (`git lfs track "*.fits"`) to handle the large file sizes efficiently (LFS stores pointers in Git and the actual files on a separate LFS server). Use **Git tags** (e.g., `calib_run_2024A`, `master_bias_2023-10`) to mark specific, validated sets of calibration files. Document how the analysis pipeline or workflow configuration should specify *which* version (tag or commit hash) of the calibration files to use for processing a given set of science data, ensuring provenance and reproducibility. Discuss repository structure (e.g., organizing by instrument, date, file type).
+
 ---
