@@ -432,14 +432,6 @@ def vet_and_plot_candidate(flat_lc_filename, bls_results_filename,
 # if success: print("\nVetting/Plotting completed successfully.")
 ```
 
-Okay, let's significantly expand Section 70.6 and the corresponding Application code examples (App 70.A and 70.B) in Chapter 70 to provide more detailed Python code illustrating the integration with Snakemake and Dask for the TESS transit search workflow.
-
----
-
-*(Replacing Section 70.6 and Applications 70.A/B in the previous Chapter 70 content)*
-
----
-
 **70.6 Implementation using Snakemake OR Dask**
 
 Having defined the logical steps of our TESS transit search workflow (retrieve/prepare, detrend, search, vet/plot), we now illustrate how to orchestrate these steps using either the Snakemake Workflow Management System or the Dask parallel computing library. Both approaches automate the execution and handle dependencies, but differ in their syntax and execution model. We assume the existence of helper Python scripts (like `download_tpf.py`, `extract_lc.py`, `detrend_lc.py`, `run_bls.py`, `plot_vetting.py`) that encapsulate the logic for each step and accept command-line arguments for inputs, outputs, and parameters, as developed conceptually in Chapter 68.
